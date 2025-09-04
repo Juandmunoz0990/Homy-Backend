@@ -1,0 +1,36 @@
+package co.edu.uniquindio.application.Services.impl;
+
+import org.springframework.stereotype.Service;
+
+import co.edu.uniquindio.application.Models.User;
+import co.edu.uniquindio.application.Repositories.UserRepository;
+import co.edu.uniquindio.application.Services.UserService;
+
+import java.util.Optional;
+
+@Service
+public class UserServiceImpl implements UserService {
+
+    private final UserRepository repo;
+
+    public UserServiceImpl(UserRepository repo) {
+        this.repo = repo;
+    }
+
+    @Override
+    public User register(User u) {
+        // Hash de contraseña simple (NO para producción): guardar en claro aquí por
+        // simplicidad
+        return repo.save(u);
+    }
+
+    @Override
+    public Optional<User> findByEmail(String email) {
+        return repo.findByEmail(email);
+    }
+
+    @Override
+    public Optional<User> findById(Long id) {
+        return repo.findById(id);
+    }
+}
