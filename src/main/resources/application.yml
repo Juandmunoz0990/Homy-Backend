@@ -14,3 +14,15 @@ app:
   jwt:
     secret: password123
     expiration-seconds: 86400
+
+springdoc:
+  swagger-ui:
+    # Swagger UI generado automáticamente con tus controllers
+    path: /swagger-ui.html
+    
+    # Opción: cargar también tu archivo openapi.yaml
+    urls:
+      - name: API Generada
+        url: /v3/api-docs
+      - name: API Especificación
+        url: /openapi.yaml

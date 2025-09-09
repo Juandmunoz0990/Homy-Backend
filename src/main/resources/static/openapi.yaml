@@ -213,7 +213,7 @@ paths:
 
   /alojamientos:
     get:
-      summary: Buscar/listar alojamientos (filtros: ciudad, fechas, precio, servicios)
+      summary: Buscar/listar alojamientos (filtros -> ciudad, fechas, precio, servicios)
       parameters:
         - name: ciudad
           in: query
@@ -404,7 +404,7 @@ paths:
         - bearerAuth: []
       responses:
         '201':
-          description: Reserva creada (estado inicial: Pendiente or Confirmada según flujo de anfitrión)
+          description: Reserva creada (estado inicial -> Pendiente or Confirmada según flujo de anfitrión)
           content:
             application/json:
               schema:

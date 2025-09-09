@@ -1,0 +1,626 @@
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-09-08T14:32:00Z"
+        status:
+          type: integer
+          example: 400
+        error:
+          type: string
+          example: "Bad Request"
+        message:
+          type: string
+          example: "La acción no es válida en el estado actual de la reserva"
+        path:
+          type: string
+          example: "/reservas/123/cancel"
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-09-08T14:32:00Z"
+        status:
+          type: integer
+          example: 422
+        error:
+          type: string
+          example: "Unprocessable Entity"
+        message:
+          type: string
+          example: "Errores de validación"
+        path:
+          type: string
+          example: "/auth/register"
+        fieldErrors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "email"
+              message:
+                type: string
+                example: "El email debe tener un formato válido"
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path
+
+    RegisterRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 2
+          maxLength: 50
+          example: "Juan"
+        apellido:
+          type: string
+          minLength: 2
+          maxLength: 50
+          example: "Pérez"
+        email:
+          type: string
+          format: email
+          example: "juan.perez@example.com"
+        password:
+          type: string
+          minLength: 8
+          example: "MiContraseña123!"
+        telefono:
+          type: string
+          pattern: "^[+]?[0-9]{10,15}$"
+          example: "+34612345678"
+        rol:
+          type: string
+          enum: [Usuario, Anfitrion]
+          example: "Usuario"
+        fechaNacimiento:
+          type: string
+          format: date
+          example: "1990-05-15"
+      required:
+        - nombre
+        - apellido
+        - email
+        - password
+        - telefono
+        - rol
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: "juan.perez@example.com"
+        password:
+          type: string
+          example: "MiContraseña123!"
+      required:
+        - email
+        - password
+
+    TokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        type:
+          type: string
+          example: "Bearer"
+        expiresIn:
+          type: integer
+          example: 3600
+          description: "Tiempo de expiración en segundos"
+        usuario:
+          $ref: '#/components/schemas/Usuario'
+      required:
+        - token
+        - type
+        - expiresIn
+        - usuario
+
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nombre:
+          type: string
+          example: "Juan"
+        apellido:
+          type: string
+          example: "Pérez"
+        email:
+          type: string
+          format: email
+          example: "juan.perez@example.com"
+        telefono:
+          type: string
+          example: "+34612345678"
+        rol:
+          type: string
+          enum: [Usuario, Anfitrion]
+          example: "Usuario"
+        fechaNacimiento:
+          type: string
+          format: date
+          example: "1990-05-15"
+        fechaRegistro:
+          type: string
+          format: date-time
+          example: "2025-01-15T10:30:00Z"
+        activo:
+          type: boolean
+          example: true
+        fotoPerfil:
+          type: string
+          format: uri
+          example: "https://example.com/uploads/users/1/profile.jpg"
+        biografia:
+          type: string
+          maxLength: 500
+          example: "Viajero apasionado que disfruta conocer nuevos lugares y culturas."
+      required:
+        - id
+        - nombre
+        - apellido
+        - email
+        - telefono
+        - rol
+        - fechaRegistro
+        - activo
+
+    UsuarioUpdate:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 2
+          maxLength: 50
+          example: "Juan Carlos"
+        apellido:
+          type: string
+          minLength: 2
+          maxLength: 50
+          example: "Pérez García"
+        telefono:
+          type: string
+          pattern: "^[+]?[0-9]{10,15}$"
+          example: "+34612345679"
+        fechaNacimiento:
+          type: string
+          format: date
+          example: "1990-05-15"
+        fotoPerfil:
+          type: string
+          format: uri
+          example: "https://example.com/uploads/users/1/new-profile.jpg"
+        biografia:
+          type: string
+          maxLength: 500
+          example: "Actualizada: Viajero apasionado con más de 10 años de experiencia."
+
+    Alojamiento:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+        titulo:
+          type: string
+          example: "Apartamento céntrico en Barcelona"
+        descripcion:
+          type: string
+          example: "Hermoso apartamento en el corazón de Barcelona, cerca de Las Ramblas"
+        ciudad:
+          type: string
+          example: "Barcelona"
+        direccion:
+          type: string
+          example: "Calle Gran Vía, 123"
+        precioPorNoche:
+          type: number
+          format: double
+          example: 85.50
+        capacidadMaxima:
+          type: integer
+          minimum: 1
+          example: 4
+        habitaciones:
+          type: integer
+          minimum: 1
+          example: 2
+        banos:
+          type: integer
+          minimum: 1
+          example: 1
+        tipoAlojamiento:
+          type: string
+          enum: [Apartamento, Casa, Habitacion, Estudio]
+          example: "Apartamento"
+        servicios:
+          type: array
+          items:
+            type: string
+          example: ["wifi", "cocina", "aire_acondicionado", "parking"]
+        imagenes:
+          type: array
+          items:
+            type: string
+            format: uri
+          example: ["https://example.com/img1.jpg", "https://example.com/img2.jpg"]
+        coordenadas:
+          type: object
+          properties:
+            latitud:
+              type: number
+              format: double
+              example: 41.3851
+            longitud:
+              type: number
+              format: double
+              example: 2.1734
+        anfitrion:
+          $ref: '#/components/schemas/Usuario'
+        fechaCreacion:
+          type: string
+          format: date-time
+          example: "2025-01-10T09:15:00Z"
+        activo:
+          type: boolean
+          example: true
+        calificacionPromedio:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 5
+          example: 4.7
+        totalComentarios:
+          type: integer
+          example: 23
+      required:
+        - id
+        - titulo
+        - descripcion
+        - ciudad
+        - direccion
+        - precioPorNoche
+        - capacidadMaxima
+        - habitaciones
+        - banos
+        - tipoAlojamiento
+        - anfitrion
+        - fechaCreacion
+        - activo
+
+    AlojamientoCreate:
+      type: object
+      properties:
+        titulo:
+          type: string
+          minLength: 10
+          maxLength: 100
+          example: "Apartamento céntrico en Barcelona"
+        descripcion:
+          type: string
+          minLength: 50
+          maxLength: 1000
+          example: "Hermoso apartamento en el corazón de Barcelona, cerca de Las Ramblas"
+        ciudad:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: "Barcelona"
+        direccion:
+          type: string
+          minLength: 10
+          maxLength: 200
+          example: "Calle Gran Vía, 123"
+        precioPorNoche:
+          type: number
+          format: double
+          minimum: 1
+          example: 85.50
+        capacidadMaxima:
+          type: integer
+          minimum: 1
+          maximum: 20
+          example: 4
+        habitaciones:
+          type: integer
+          minimum: 1
+          maximum: 10
+          example: 2
+        banos:
+          type: integer
+          minimum: 1
+          maximum: 10
+          example: 1
+        tipoAlojamiento:
+          type: string
+          enum: [Apartamento, Casa, Habitacion, Estudio]
+          example: "Apartamento"
+        servicios:
+          type: array
+          items:
+            type: string
+          example: ["wifi", "cocina", "aire_acondicionado", "parking"]
+        imagenes:
+          type: array
+          items:
+            type: string
+            format: uri
+          minItems: 1
+          maxItems: 10
+          example: ["https://example.com/img1.jpg", "https://example.com/img2.jpg"]
+        coordenadas:
+          type: object
+          properties:
+            latitud:
+              type: number
+              format: double
+              minimum: -90
+              maximum: 90
+              example: 41.3851
+            longitud:
+              type: number
+              format: double
+              minimum: -180
+              maximum: 180
+              example: 2.1734
+          required:
+            - latitud
+            - longitud
+      required:
+        - titulo
+        - descripcion
+        - ciudad
+        - direccion
+        - precioPorNoche
+        - capacidadMaxima
+        - habitaciones
+        - banos
+        - tipoAlojamiento
+        - imagenes
+
+    AlojamientoUpdate:
+      type: object
+      properties:
+        titulo:
+          type: string
+          minLength: 10
+          maxLength: 100
+          example: "Apartamento céntrico renovado en Barcelona"
+        descripcion:
+          type: string
+          minLength: 50
+          maxLength: 1000
+          example: "Apartamento completamente renovado en el corazón de Barcelona"
+        precioPorNoche:
+          type: number
+          format: double
+          minimum: 1
+          example: 90.00
+        capacidadMaxima:
+          type: integer
+          minimum: 1
+          maximum: 20
+          example: 4
+        servicios:
+          type: array
+          items:
+            type: string
+          example: ["wifi", "cocina", "aire_acondicionado", "parking", "netflix"]
+        imagenes:
+          type: array
+          items:
+            type: string
+            format: uri
+          minItems: 1
+          maxItems: 10
+          example: ["https://example.com/new-img1.jpg", "https://example.com/new-img2.jpg"]
+
+    Reserva:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 456
+        usuario:
+          $ref: '#/components/schemas/Usuario'
+        alojamiento:
+          $ref: '#/components/schemas/Alojamiento'
+        fechaCheckIn:
+          type: string
+          format: date
+          example: "2025-10-15"
+        fechaCheckOut:
+          type: string
+          format: date
+          example: "2025-10-20"
+        numeroHuespedes:
+          type: integer
+          minimum: 1
+          example: 2
+        precioTotal:
+          type: number
+          format: double
+          example: 427.50
+        estado:
+          type: string
+          enum: [Pendiente, Confirmada, Cancelada, Completada]
+          example: "Confirmada"
+        fechaReserva:
+          type: string
+          format: date-time
+          example: "2025-09-01T15:30:00Z"
+        fechaActualizacion:
+          type: string
+          format: date-time
+          example: "2025-09-02T10:15:00Z"
+        notas:
+          type: string
+          maxLength: 500
+          example: "Llegada aproximada a las 16:00h"
+        metodoPago:
+          type: string
+          enum: [Tarjeta, Transferencia, PayPal]
+          example: "Tarjeta"
+      required:
+        - id
+        - usuario
+        - alojamiento
+        - fechaCheckIn
+        - fechaCheckOut
+        - numeroHuespedes
+        - precioTotal
+        - estado
+        - fechaReserva
+
+    ReservaCreate:
+      type: object
+      properties:
+        alojamientoId:
+          type: integer
+          minimum: 1
+          example: 123
+        fechaCheckIn:
+          type: string
+          format: date
+          example: "2025-10-15"
+        fechaCheckOut:
+          type: string
+          format: date
+          example: "2025-10-20"
+        numeroHuespedes:
+          type: integer
+          minimum: 1
+          example: 2
+        notas:
+          type: string
+          maxLength: 500
+          example: "Llegada aproximada a las 16:00h"
+        metodoPago:
+          type: string
+          enum: [Tarjeta, Transferencia, PayPal]
+          example: "Tarjeta"
+      required:
+        - alojamientoId
+        - fechaCheckIn
+        - fechaCheckOut
+        - numeroHuespedes
+        - metodoPago
+
+    Comentario:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 789
+        usuario:
+          $ref: '#/components/schemas/Usuario'
+        alojamiento:
+          $ref: '#/components/schemas/Alojamiento'
+        reserva:
+          $ref: '#/components/schemas/Reserva'
+        calificacion:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        comentario:
+          type: string
+          minLength: 10
+          maxLength: 1000
+          example: "Excelente alojamiento, muy limpio y bien ubicado. El anfitrión fue muy atento."
+        fechaComentario:
+          type: string
+          format: date-time
+          example: "2025-10-25T18:45:00Z"
+        respuestaAnfitrion:
+          type: string
+          maxLength: 500
+          example: "Gracias por tu comentario, fue un placer tenerte como huésped"
+        fechaRespuesta:
+          type: string
+          format: date-time
+          example: "2025-10-26T09:30:00Z"
+      required:
+        - id
+        - usuario
+        - alojamiento
+        - reserva
+        - calificacion
+        - comentario
+        - fechaComentario
+
+    ComentarioCreate:
+      type: object
+      properties:
+        reservaId:
+          type: integer
+          minimum: 1
+          example: 456
+        calificacion:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        comentario:
+          type: string
+          minLength: 10
+          maxLength: 1000
+          example: "Excelente alojamiento, muy limpio y bien ubicado. El anfitrión fue muy atento."
+      required:
+        - reservaId
+        - calificacion
+        - comentario
+
+    Favorito:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 321
+        usuario:
+          $ref: '#/components/schemas/Usuario'
+        alojamiento:
+          $ref: '#/components/schemas/Alojamiento'
+        fechaAgregado:
+          type: string
+          format: date-time
+          example: "2025-09-08T12:00:00Z"
+      required:
+        - id
+        - usuario
+        - alojamiento
+        - fechaAgregadojson:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
