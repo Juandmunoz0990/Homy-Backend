@@ -1,5 +1,8 @@
 package co.edu.uniquindio.application.Models;
 
+import java.util.List;
+
+import co.edu.uniquindio.application.Models.enums.ServicesEnum;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,12 +25,13 @@ public class Housing {
     private Double lenght;
     private Double nightPrice;
     private Integer maxCapacity;
-    private ServicesEnum services;
-    private String imagenPrincipal;
-    private String estado = "activo";
-    private Long anfitrionId;
+    private List<ServicesEnum> services;
+    private String principalImage;
+    private String state = "active";
+    private Double averageRating;
+    @OneToMany
+    private List<Booking> bookingsList;
+    private Long hostId;
 
-    private enum ServicesEnum {
-        WIFI, PARKING, POOL, GYM, PETS_ALLOWED, AIR_CONDITIONING, BREAKFAST_INCLUDED
-    }
+
 }
