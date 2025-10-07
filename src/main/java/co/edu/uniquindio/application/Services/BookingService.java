@@ -1,16 +1,24 @@
 package co.edu.uniquindio.application.Services;
 
-import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import co.edu.uniquindio.application.Dtos.booking.BookingCreateDTO;
+import co.edu.uniquindio.application.Dtos.booking.BookingDetailDTO;
+import co.edu.uniquindio.application.Dtos.booking.BookingFilterDTO;
+import co.edu.uniquindio.application.Dtos.booking.BookingSummaryDTO;
 import co.edu.uniquindio.application.Models.Booking;
+import co.edu.uniquindio.application.Security.CustomUserDetails;
 
 public interface BookingService {
-    Booking create(Booking r);
 
-    List<Booking> findByUsuarioId(Long usuarioId);
+    Booking save(BookingCreateDTO b);
 
-    List<Booking> findAll();
+    Page<BookingSummaryDTO> searchBookings(CustomUserDetails user, BookingFilterDTO filter, Pageable pageable);
 
-    Optional<Booking> findById(Long id);
+    void cancelBooking(Long id, Long guestId);
+
+    Optional<BookingDetailDTO> findBookingDetailById(Long id);
 }

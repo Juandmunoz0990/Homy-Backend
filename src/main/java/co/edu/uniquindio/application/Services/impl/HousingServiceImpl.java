@@ -10,8 +10,7 @@ import co.edu.uniquindio.application.Dtos.Housing.Responses.SummaryHousingRespon
 import co.edu.uniquindio.application.Models.Housing;
 import co.edu.uniquindio.application.Repositories.HousingRepository;
 import co.edu.uniquindio.application.Services.HousingService;
-import co.edu.uniquindio.mappers.HousingMapper;
-
+import co.edu.uniquindio.application.mappers.HousingMapper;
 
 import java.time.Instant;
 import java.time.LocalDate;

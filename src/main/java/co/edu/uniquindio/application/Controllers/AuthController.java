@@ -41,7 +41,11 @@ public class AuthController {
         var u = opt.get();
         if (!u.getPassword().equals(req.getPassword()))
             return ResponseEntity.status(401).body("Credenciales inválidas");
-        var token = jwtUtil.generateToken(u.getEmail());
+
+        org.springframework.security.core.Authentication authentication =
+            new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                u.getEmail(), u.getPassword(), java.util.Collections.emptyList());
+        var token = jwtUtil.generateToken(authentication);
         return ResponseEntity.ok(new java.util.HashMap<String, String>() {
             {
                 put("accessToken", token);

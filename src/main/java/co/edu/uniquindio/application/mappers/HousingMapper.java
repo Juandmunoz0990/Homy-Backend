@@ -1,4 +1,4 @@
-package co.edu.uniquindio.mappers;
+package co.edu.uniquindio.application.mappers;
 
 import org.mapstruct.Mapper;
 

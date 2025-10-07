@@ -2,8 +2,11 @@ package co.edu.uniquindio.application.Models;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+
+import co.edu.uniquindio.application.Models.enums.BookingStatus;
 
 @Entity
 @Table(name = "bookings")
@@ -15,17 +18,29 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long housingId;
-    private Long guestId;
-    private LocalDate checkIn;
-    private LocalDate checkOut;
-    private Integer guestsNumber;
-    private BookingState estado;
-    private Double totalPrecio;
-    private Boolean pagado = false;
-    private LocalDateTime creadoEn = LocalDateTime.now();
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private Housing housing;
 
-    private enum BookingState {
-        PENDING, CONFIRMED, CANCELED, COMPLETED
-    }
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private User guest;
+
+    @Column(nullable = false)
+    private LocalDate checkIn;
+
+    @Column(nullable = false)
+    private LocalDate checkOut;
+
+    @Column(nullable = false)
+    private Integer guestsNumber;
+
+    @Column(nullable = false)
+    private BookingStatus status;
+
+    @Column(nullable = false)
+    private Double totalPrice;
+    
+    @Column(nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 }

@@ -1,38 +1,67 @@
 package co.edu.uniquindio.application.Controllers;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import co.edu.uniquindio.application.Dtos.booking.BookingCreateDTO;
+import co.edu.uniquindio.application.Dtos.booking.BookingDetailDTO;
+import co.edu.uniquindio.application.Dtos.booking.BookingFilterDTO;
+import co.edu.uniquindio.application.Dtos.booking.BookingSummaryDTO;
 import co.edu.uniquindio.application.Models.Booking;
+import co.edu.uniquindio.application.Security.CustomUserDetails;
 import co.edu.uniquindio.application.Services.BookingService;
-
-import java.util.List;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/bookings")
 public class BookingController {
 
-    private final BookingService servicio;
+    private final BookingService bookingService;
 
-    public BookingController(BookingService servicio) {
-        this.servicio = servicio;
+    public BookingController(BookingService bookingService) {
+        this.bookingService = bookingService;
     }
 
+    /**
+     * Save a new booking
+     */
     @PostMapping
-    public ResponseEntity<Booking> crear(@RequestBody Booking r) {
-        var creado = servicio.create(r);
+    public ResponseEntity<Booking> save(@Valid @RequestBody BookingCreateDTO r) {
+        var creado = bookingService.save(r);
         return ResponseEntity.status(201).body(creado);
     }
-
-    @GetMapping
-    public ResponseEntity<List<Booking>> listar(@RequestParam(required = false) Long usuarioId) {
-        if (usuarioId != null)
-            return ResponseEntity.ok(servicio.findByUsuarioId(usuarioId));
-        return ResponseEntity.ok(servicio.findAll());
+    
+    /**
+     * Cancel a booking by its id
+     */
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<Void> cancelBooking(@AuthenticationPrincipal CustomUserDetails user, @PathVariable Long id) {
+        Long guestId = user.getId();
+        bookingService.cancelBooking(id, guestId);
+        return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Search bookings with filters. Hosts see bookings for their housings, guests see only their bookings.
+     */
+    @GetMapping("/search") //Example: GET /bookings/search?page=2
+    public ResponseEntity<Page<BookingSummaryDTO>> searchBookings(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @ModelAttribute BookingFilterDTO filter,
+            Pageable pageable) {
+        
+        Page<BookingSummaryDTO> bookings = bookingService.searchBookings(user, filter, pageable);
+        return ResponseEntity.ok(bookings);
+    }
+
+    /**
+     * Get a booking by its id
+     */
     @GetMapping("/{id}")
-    public ResponseEntity<Booking> getById(@PathVariable Long id) {
-        return servicio.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<BookingDetailDTO> getById(@PathVariable Long id) {
+        return bookingService.findBookingDetailById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 }

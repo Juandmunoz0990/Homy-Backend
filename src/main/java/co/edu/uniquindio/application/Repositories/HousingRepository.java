@@ -14,7 +14,7 @@ public interface HousingRepository extends JpaRepository<Housing, Long> {
     Page<Housing> findByTitleContainingIgnoreCase(String title, Pageable pageable);
 
     @Query("select h from Housing h where (city is null or h.city = :city) and  ")
-    Page<Housing> findByTitleContainingIgnoreCase(String city, Pageable pageable);
+    Page<Housing> findByTitleContainingIgnoreCase2(String city, Pageable pageable);
     
 
 }
