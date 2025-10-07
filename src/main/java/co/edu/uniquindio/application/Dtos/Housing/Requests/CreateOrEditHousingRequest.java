@@ -4,12 +4,12 @@ import java.util.List;
 
 import co.edu.uniquindio.application.Models.enums.ServicesEnum;
 
-public record CreateHousingRequest (
+public record CreateOrEditHousingRequest (
     String title,
     String description,
     String city,
     Double latitude,
-    Double lenght,
+    Double length,
     String address,
     Integer maxCapacity,
     Double pricePerNight,
