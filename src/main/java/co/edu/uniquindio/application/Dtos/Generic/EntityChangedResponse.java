@@ -2,17 +2,14 @@ package co.edu.uniquindio.application.Dtos.Generic;
 
 import java.time.Instant;
 
-
-
-public class EntityCreatedResponse {
+public class EntityChangedResponse {
     private String message;
     private Instant timestamp;
 
-    public EntityCreatedResponse(){
-
+    public EntityChangedResponse() {
     }
 
-    public EntityCreatedResponse (String message, Instant timestamp){
+    public EntityChangedResponse(String message, Instant timestamp) {
         this.message = message;
         this.timestamp = timestamp;
     }
@@ -32,7 +29,5 @@ public class EntityCreatedResponse {
     public void setTimestamp(Instant timestamp) {
         this.timestamp = timestamp;
     }
-
     
-
 }
