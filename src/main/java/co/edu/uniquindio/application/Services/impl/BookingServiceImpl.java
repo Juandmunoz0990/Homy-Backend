@@ -91,7 +91,7 @@ public class BookingServiceImpl implements BookingService {
         if (user.hasRole("HOST")) {
             //Lógica para que el host vea las reservas de solo sus alojamientos
             if (f.getHousingId() != null) {
-                if (!housingService.existsByIdAndHostId(f.getHousingId(), user.getId())) {
+                if (!housingService.existsHousing(f.getHousingId(), user.getId())) {
                     throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso para ver las reservas de este alojamiento.");
                 }
             }

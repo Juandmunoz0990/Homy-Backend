@@ -52,8 +52,8 @@ public class HousingController {
 
       @GetMapping
       public ResponseEntity<Page<SummaryHousingResponse>> getHousings (@RequestParam String city, @RequestParam LocalDate checkIn, @RequestParam LocalDate checkOut,
-                                                             @RequestParam Integer totalGuests, @RequestParam Integer indexPage){
-        Page<SummaryHousingResponse> response = service.getHousingsByFilters(city, checkIn, checkOut, totalGuests, indexPage);
+                                                             @RequestParam Integer minPrice, @RequestParam Integer maxPrice , @RequestParam Integer indexPage){
+        Page<SummaryHousingResponse> response = service.getHousingsByFilters(city, checkIn, checkOut, minPrice, maxPrice, indexPage);
         return ResponseEntity.ok(response);
       }
     
