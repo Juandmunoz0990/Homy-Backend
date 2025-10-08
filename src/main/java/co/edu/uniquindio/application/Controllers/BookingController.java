@@ -2,15 +2,16 @@ package co.edu.uniquindio.application.Controllers;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import co.edu.uniquindio.application.Dtos.ResponseDTO;
 import co.edu.uniquindio.application.Dtos.booking.BookingCreateDTO;
 import co.edu.uniquindio.application.Dtos.booking.BookingDetailDTO;
 import co.edu.uniquindio.application.Dtos.booking.BookingFilterDTO;
 import co.edu.uniquindio.application.Dtos.booking.BookingSummaryDTO;
-import co.edu.uniquindio.application.Models.Booking;
 import co.edu.uniquindio.application.Security.CustomUserDetails;
 import co.edu.uniquindio.application.Services.BookingService;
 import jakarta.validation.Valid;
@@ -29,9 +30,9 @@ public class BookingController {
      * Save a new booking
      */
     @PostMapping
-    public ResponseEntity<Booking> save(@Valid @RequestBody BookingCreateDTO r) {
-        var creado = bookingService.save(r);
-        return ResponseEntity.status(201).body(creado);
+    public ResponseEntity<ResponseDTO<String>> save(@Valid @RequestBody BookingCreateDTO r) {
+        bookingService.save(r);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseDTO<>(false, "Booking created successfully"));
     }
     
     /**
@@ -62,6 +63,6 @@ public class BookingController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<BookingDetailDTO> getById(@PathVariable Long id) {
-        return bookingService.findBookingDetailById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(bookingService.findBookingDetailById(id));
     }
 }

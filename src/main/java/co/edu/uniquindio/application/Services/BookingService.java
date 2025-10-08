@@ -1,7 +1,5 @@
 package co.edu.uniquindio.application.Services;
 
-import java.util.Optional;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -20,5 +18,7 @@ public interface BookingService {
 
     void cancelBooking(Long id, Long guestId);
 
-    Optional<BookingDetailDTO> findBookingDetailById(Long id);
+    BookingDetailDTO findBookingDetailById(Long id);
+
+    boolean existsFutureBookingsForHousing(Long housingId);
 }

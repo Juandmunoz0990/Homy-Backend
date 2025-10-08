@@ -81,7 +81,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             h.id, h.title, h.description, h.address, h.city,
             h.nightPrice, h.maxCapacity, h.principalImage, h.averageRating
         ),
-        new BookingDetailDTO.HousingInfo(
+        new com.example.booking.dto.BookingDetailDTO$GuestInfo(
             g.id, g.name, g.email, g.phoneNumber
         )
         )
@@ -107,4 +107,22 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
         @Param("startDate") LocalDate startDate,
         @Param("endDate") LocalDate endDate,
         @Param("statuses") List<BookingStatus> statuses);
+
+    /**
+     * Returns true if there exists at least one booking for the given housing
+     * with a status in the provided list and with checkOut >= :today
+     * (meaning the booking is active or in the future).
+     */
+    @Query("""
+        SELECT CASE WHEN COUNT(b) > 0 THEN TRUE ELSE FALSE END
+        FROM Booking b
+        WHERE b.housing.id = :housingId
+          AND b.status IN :statuses
+          AND b.checkOut >= :today
+    """)
+    boolean existsActiveOrFutureBookingForHousing(
+        @Param("housingId") Long housingId,
+        @Param("statuses") List<BookingStatus> statuses,
+        @Param("today") LocalDate today
+    );
 }

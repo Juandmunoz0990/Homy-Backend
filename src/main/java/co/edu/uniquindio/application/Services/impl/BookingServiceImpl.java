@@ -40,8 +40,8 @@ public class BookingServiceImpl implements BookingService {
     /**
      * Save a new booking.
      */
-    @Transactional
     @Override
+    @Transactional
     public Booking save(BookingCreateDTO b) {
         boolean hasOverlap = repo.existsOverlappingBooking(
             b.getHousingId(), b.getCheckIn(), b.getCheckOut(), List.of(BookingStatus.CONFIRMED));
@@ -65,8 +65,8 @@ public class BookingServiceImpl implements BookingService {
     /**
      * Cancel a booking by setting its state to CANCELED.
      */
-    @Transactional
     @Override
+    @Transactional
     public void cancelBooking(Long id, Long guestId) {
         Optional<Booking> bookingOptional = repo.findByIdAndGuestId(id, guestId);
 
@@ -86,12 +86,13 @@ public class BookingServiceImpl implements BookingService {
     /**
      * Find Bookings with filters. For host or guest.
      */
-    @Override  //Ver que devuelva el dto directamente
+    @Override
+    @Transactional(readOnly = true)
     public Page<BookingSummaryDTO> searchBookings(CustomUserDetails user, BookingFilterDTO f, Pageable pageable) {
         if (user.hasRole("HOST")) {
             //Lógica para que el host vea las reservas de solo sus alojamientos
             if (f.getHousingId() != null) {
-                if (!housingService.existsByIdAndHostId(f.getHousingId(), user.getId())) {
+                if (!housingService.existsHousing(f.getHousingId(), user.getId())) {
                     throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso para ver las reservas de este alojamiento.");
                 }
             }
@@ -109,7 +110,20 @@ public class BookingServiceImpl implements BookingService {
      * Find a booking by its id.
      */
     @Override
-    public Optional<BookingDetailDTO> findBookingDetailById(Long id) {
-        return repo.findBookingDetailById(id);
+    @Transactional(readOnly = true)
+    public BookingDetailDTO findBookingDetailById(Long id) {
+        BookingDetailDTO detail = repo.findBookingDetailById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Booking not found for the given id."));
+        return detail;
+    }
+
+    /**
+     * Check if there are active or future bookings for a given housing. For housing service.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsFutureBookingsForHousing(Long housingId) {
+        LocalDate today = LocalDate.now();
+        return repo.existsActiveOrFutureBookingForHousing(housingId, List.of(BookingStatus.CONFIRMED), today);
     }
 }

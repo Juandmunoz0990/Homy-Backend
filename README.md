@@ -21,3 +21,11 @@ La aplicación busca ofrecer una experiencia similar a la de plataformas reconoc
 - Juan Pablo Rodríguez  
 - Miguel Angel Vasquez
 - Juan David Muñoz 
+
+## Observaciones:
+- Hacer exception handler de todas las excepciones.
+- throws excpetion en controllers?
+- records for DTOs
+- validaciones for dtos requests
+- MethodArgumentNotValidException: Excepción que se lanza cuando no se cumple alguna validación puesta en los DTO (@NotNull, @Email, @Max, etc..). Para este caso debe crear un nuevo DTO con el nombre: ValidationDTO, este record debe debe tener dos String: field y message.
+- 
