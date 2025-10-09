@@ -1,6 +1,13 @@
 package co.edu.uniquindio.application.Controllers;
 
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import co.edu.uniquindio.application.Dtos.LoginRequest;
@@ -13,12 +20,16 @@ import co.edu.uniquindio.application.Services.UserService;
 @RequestMapping("/auth")
 public class AuthController {
 
-    private final UserService usuarioService;
+    private final UserService userService;
     private final JwtUtil jwtUtil;
+    private final AuthenticationManager authenticationManager;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthController(UserService usuarioService, JwtUtil jwtUtil) {
-        this.usuarioService = usuarioService;
+    public AuthController(UserService userService, JwtUtil jwtUtil, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
+        this.userService = userService;
         this.jwtUtil = jwtUtil;
+        this.authenticationManager = authenticationManager;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/register")
@@ -26,31 +37,28 @@ public class AuthController {
         User u = new User();
         u.setName(req.getNombre());
         u.setEmail(req.getEmail());
-        u.setPassword(req.getPassword());
+        u.setPassword(passwordEncoder.encode(req.getPassword()));
         u.setPhoneNumber(req.getTelefono());
         u.setRole(req.getRole());
-        var saved = usuarioService.register(u);
+        var saved = userService.register(u);
         return ResponseEntity.status(201).body(saved);
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
-        var opt = usuarioService.findByEmail(req.getEmail());
-        if (opt.isEmpty())
-            return ResponseEntity.status(401).body("Credenciales inválidas");
-        var u = opt.get();
-        if (!u.getPassword().equals(req.getPassword()))
-            return ResponseEntity.status(401).body("Credenciales inválidas");
+       try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword())
+            );
 
-        org.springframework.security.core.Authentication authentication =
-            new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                u.getEmail(), u.getPassword(), java.util.Collections.emptyList());
-        var token = jwtUtil.generateToken(authentication);
-        return ResponseEntity.ok(new java.util.HashMap<String, String>() {
-            {
-                put("accessToken", token);
-                put("tokenType", "Bearer");
-            }
-        });
+            String token = jwtUtil.generateToken(authentication);
+
+            return ResponseEntity.ok(Map.of(
+                    "accessToken", token,
+                    "tokenType", "Bearer"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        }
     }
 }
