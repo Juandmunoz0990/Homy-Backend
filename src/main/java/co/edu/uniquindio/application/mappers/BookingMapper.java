@@ -7,6 +7,7 @@ import co.edu.uniquindio.application.Models.Booking;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface BookingMapper {
+    
 
     @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "guest", ignore = true)
