@@ -6,6 +6,7 @@ import java.time.LocalDate;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -39,4 +40,8 @@ public interface HousingRepository extends JpaRepository<Housing, Long> {
       Pageable pageable);
 
   Boolean existsByIdAndHostId(Long housingId, Long hostId);
+
+  @Modifying
+  @Query("UPDATE Housing h SET h.state = 'deleted' WHERE h.id = :housingId AND h.hostId = :hostId")
+  void softDeleteByIdAndHostId(@Param("housingId") Long housingId, @Param("hostId") Long hostId);
 }
