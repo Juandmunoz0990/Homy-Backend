@@ -11,12 +11,15 @@ import org.springframework.data.domain.PageRequest;
 import co.edu.uniquindio.application.Dtos.Generic.EntityChangedResponse;
 import co.edu.uniquindio.application.Dtos.Generic.EntityCreatedResponse;
 import co.edu.uniquindio.application.Dtos.Housing.Requests.CreateOrEditHousingRequest;
+import co.edu.uniquindio.application.Dtos.Housing.Responses.HousingResponse;
 import co.edu.uniquindio.application.Dtos.Housing.Responses.SummaryHousingResponse;
 import co.edu.uniquindio.application.Exception.HousingUndeletedException;
 import co.edu.uniquindio.application.Models.Housing;
+import co.edu.uniquindio.application.Models.User;
 import co.edu.uniquindio.application.Repositories.HousingRepository;
 import co.edu.uniquindio.application.Services.BookingService;
 import co.edu.uniquindio.application.Services.HousingService;
+import co.edu.uniquindio.application.Services.UserService;
 import co.edu.uniquindio.application.mappers.HousingMapper;
 
 import java.time.Instant;
@@ -29,6 +32,7 @@ public class HousingServiceImpl implements HousingService {
     private final HousingRepository housingRepository;
     private final HousingMapper housingMapper;
     private final BookingService bookingService;
+    private final UserService userService;
 
     @Value("${spring.pageable.default-page-size}")
     private int PAGE_SIZE;
@@ -39,10 +43,12 @@ public class HousingServiceImpl implements HousingService {
     private static final LocalDate CHECK_IN_DEFAULT = LocalDate.now();
     private static final LocalDate CHECK_OUT_DEFAULT = LocalDate.now().plusDays(1);
 
-    public HousingServiceImpl(HousingRepository housingRepository, HousingMapper housingMapper, BookingService bookingService) {
+    public HousingServiceImpl(HousingRepository housingRepository, HousingMapper housingMapper, BookingService bookingService,
+    UserService userService) {
         this.housingRepository = housingRepository;
         this.housingMapper = housingMapper;
         this.bookingService = bookingService;
+        this.userService = userService;
     }
 
     @Override
@@ -94,6 +100,21 @@ public class HousingServiceImpl implements HousingService {
 
         return housings.map(housingMapper::toSummaryHousingResponse);
     }
+
+    @Override
+@Transactional(readOnly = true)
+public HousingResponse getHousingDetail(Long housingId) {
+
+    Housing housing = housingRepository.findById(housingId)
+            .orElseThrow(() -> new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class));
+
+    HousingResponse response = housingMapper.toHousingResponse(housing);
+
+    User user = userService.findById(housing.getHostId());
+    response.setHostName(user.getName());
+
+    return response;
+}
 
     @Override
      @Transactional(readOnly = true)

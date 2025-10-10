@@ -9,8 +9,6 @@ import co.edu.uniquindio.application.Models.User;
 import co.edu.uniquindio.application.Repositories.UserRepository;
 import co.edu.uniquindio.application.Services.UserService;
 
-import java.util.Optional;
-
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -28,13 +26,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Optional<User> findByEmail(String email) {
-        return repo.findByEmail(email);
+    public User findByEmail(String email) {
+        return repo.findByEmail(email).orElseThrow(() -> new ObjectNotFoundException("User with email: " + email +" not found", User.class));
     }
 
     @Override
-    public Optional<User> findById(Long id) {
-        return repo.findById(id);
+    public User findById(Long id) {
+        return repo.findById(id).orElseThrow(() -> new ObjectNotFoundException("User with id: " + id + " not found" , User.class));
     }
 
     @Override

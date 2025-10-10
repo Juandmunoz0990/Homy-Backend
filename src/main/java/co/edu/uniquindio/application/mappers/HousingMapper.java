@@ -3,6 +3,7 @@ package co.edu.uniquindio.application.mappers;
 import org.mapstruct.Mapper;
 
 import co.edu.uniquindio.application.Dtos.Housing.Requests.CreateOrEditHousingRequest;
+import co.edu.uniquindio.application.Dtos.Housing.Responses.HousingResponse;
 import co.edu.uniquindio.application.Dtos.Housing.Responses.SummaryHousingResponse;
 import co.edu.uniquindio.application.Models.Housing;
 
@@ -11,4 +12,5 @@ public interface HousingMapper {
     
     Housing toHousing(CreateOrEditHousingRequest request);
     SummaryHousingResponse toSummaryHousingResponse (Housing housing);
+    HousingResponse toHousingResponse (Housing housing);
 }
