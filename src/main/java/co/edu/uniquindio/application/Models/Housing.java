@@ -26,7 +26,7 @@ public class Housing {
     private String city;
     private String address;
     private Double latitude;
-    private Double lenght;
+    private Double length;
     private Double nightPrice;
     private Integer maxCapacity;
     @ElementCollection(fetch = FetchType.EAGER)
