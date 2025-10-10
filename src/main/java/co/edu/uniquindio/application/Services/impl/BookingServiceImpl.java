@@ -11,14 +11,18 @@ import co.edu.uniquindio.application.Dtos.booking.BookingCreateDTO;
 import co.edu.uniquindio.application.Dtos.booking.BookingDetailDTO;
 import co.edu.uniquindio.application.Dtos.booking.BookingFilterDTO;
 import co.edu.uniquindio.application.Dtos.booking.BookingSummaryDTO;
+import co.edu.uniquindio.application.Dtos.email.EmailDTO;
 import co.edu.uniquindio.application.Models.Booking;
 import co.edu.uniquindio.application.Models.Housing;
+import co.edu.uniquindio.application.Models.User;
 import co.edu.uniquindio.application.Models.enums.BookingStatus;
 import co.edu.uniquindio.application.Repositories.BookingRepository;
 import co.edu.uniquindio.application.Repositories.HousingRepository;
 import co.edu.uniquindio.application.Security.CustomUserDetails;
 import co.edu.uniquindio.application.Services.BookingService;
+import co.edu.uniquindio.application.Services.EmailService;
 import co.edu.uniquindio.application.Services.HousingService;
+import co.edu.uniquindio.application.Services.UserService;
 import co.edu.uniquindio.application.mappers.BookingMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +40,8 @@ public class BookingServiceImpl implements BookingService {
     private final BookingMapper mapper;
     private final HousingRepository housingRepository;
     private final HousingService housingService;
+    private final EmailService emailService;
+    private final UserService userService;
 
     /**
      * Save a new booking.
@@ -44,21 +50,33 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     public Booking save(BookingCreateDTO b) {
         boolean hasOverlap = repo.existsOverlappingBooking(
-            b.getHousingId(), b.getCheckIn(), b.getCheckOut(), List.of(BookingStatus.CONFIRMED));
+            b.housingId(), b.checkIn(), b.checkOut(), List.of(BookingStatus.CONFIRMED));
         if (hasOverlap) throw new IllegalStateException("The housing is not available for the selected dates.");
 
-        if (b.getCheckIn().isAfter(b.getCheckOut())) throw new IllegalStateException("Check-in date must be before check-out date");
+        if (b.checkIn().isAfter(b.checkOut())) throw new IllegalStateException("Check-in date must be before check-out date");
 
-        if (b.getCheckOut().isBefore(LocalDate.now())) throw new IllegalStateException("Check-out date must be in the future");
+        if (b.checkOut().isBefore(LocalDate.now())) throw new IllegalStateException("Check-out date must be in the future");
 
-        long daysBetween = ChronoUnit.DAYS.between(b.getCheckIn(), b.getCheckOut());
+        long daysBetween = ChronoUnit.DAYS.between(b.checkIn(), b.checkOut());
         if (daysBetween < 1) throw new IllegalStateException("Booking must be at least one night");
 
-        Housing housing = housingRepository.findById(b.getHousingId())
+        Housing housing = housingRepository.findById(b.housingId())
         .orElseThrow(() -> new EntityNotFoundException("Housing not found"));
-        if (housing.getMaxCapacity() < b.getGuestsNumber()) throw new IllegalStateException("Number of guests exceeds housing capacity");
+        if (housing.getMaxCapacity() < b.guestsNumber()) throw new IllegalStateException("Number of guests exceeds housing capacity");
 
+        User guest = userService.findById(b.guestId());
         //Enviar correo
+        try {
+            emailService.sendMail(new EmailDTO(
+                "Reserva creada",
+                "Su reserva ha sido creada exitosamente." + "\nDetalles:\nAlojamiento: " + housing.getTitle() +
+                "\nCheck-in: " + b.checkIn() + "\nCheck-out: " + b.checkOut() +
+                "\nNúmero de huéspedes: " + b.guestsNumber() + "\nPrecio total: " + b.totalPrice(),
+                guest.getEmail()));
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send email", e);
+        }
         return repo.save(mapper.toBooking(b));
     }
 
@@ -79,7 +97,19 @@ public class BookingServiceImpl implements BookingService {
 
         booking.setStatus(BookingStatus.CANCELED);
 
+        User guest = userService.findById(guestId);
         //Enviar correo
+        try {
+            emailService.sendMail(new EmailDTO(
+                "Reserva creada",
+                "Su reserva ha sido creada exitosamente." + "\nDetalles:\nAlojamiento: " + booking.getHousing().getTitle() +
+                "\nCheck-in: " + booking.getCheckIn() + "\nCheck-out: " + booking.getCheckOut() +
+                "\nNúmero de huéspedes: " + booking.getGuestsNumber() + "\nPrecio total: " + booking.getTotalPrice(),
+                guest.getEmail()));
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send email", e);
+        }
         repo.save(booking);
     }
 
@@ -91,19 +121,17 @@ public class BookingServiceImpl implements BookingService {
     public Page<BookingSummaryDTO> searchBookings(CustomUserDetails user, BookingFilterDTO f, Pageable pageable) {
         if (user.hasRole("HOST")) {
             //Lógica para que el host vea las reservas de solo sus alojamientos
-            if (f.getHousingId() != null) {
-                if (!housingService.existsHousing(f.getHousingId(), user.getId())) {
+            if (f.housingId() != null) {
+                if (!housingService.existsHousing(f.housingId(), user.getId())) {
                     throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso para ver las reservas de este alojamiento.");
                 }
             }
         }
         if (user.hasRole("GUEST")) {
             //Lógica para que el huésped vea solo sus reservas
-            f.setHousingId(null);
-            f.setGuestId(user.getId());
+            f = new BookingFilterDTO(null, user.getId(), f.status(), f.start(), f.end());
         }
-
-        return repo.searchBookings(f.getHousingId(), f.getGuestId(), f.getStatus(), f.getStart(), f.getEnd(), pageable);
+        return repo.searchBookings(f.housingId(), f.guestId(), f.status(), f.start(), f.end(), pageable);
     }
 
     /**

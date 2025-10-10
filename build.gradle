@@ -43,6 +43,10 @@ dependencies {
     // Cloudinary para gestion de imagenes
     implementation 'com.cloudinary:cloudinary-http5:2.3.0'
 
+    // Simple Java Mail para envio de correos
+    implementation 'org.simplejavamail:simple-java-mail:8.12.6'
+    implementation 'org.simplejavamail:batch-module:8.12.6'
+
     // Runtime DB para pruebas
     runtimeOnly 'com.h2database:h2'
 

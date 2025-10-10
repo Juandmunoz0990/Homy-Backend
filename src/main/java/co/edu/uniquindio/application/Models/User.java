@@ -23,6 +23,6 @@ public class User {
     private Date birthDate;
 
     public enum Role {
-        HOST, GUEST;
+        HOST, GUEST, ADMIN;
     }
 }

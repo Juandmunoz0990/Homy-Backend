@@ -3,14 +3,19 @@ package co.edu.uniquindio.application.Dtos.booking;
 import java.time.LocalDate;
 
 import co.edu.uniquindio.application.Models.enums.BookingStatus;
-import lombok.Data;
+import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.PastOrPresent;
 
-@Data
-public class BookingFilterDTO {
-    
-    private Long housingId; //Only for host
-    private Long guestId; //Only for guest
-    private BookingStatus status;
-    private LocalDate start;
-    private LocalDate end;
-}
+public record BookingFilterDTO(
+
+    Long housingId,  // Solo para anfitrión
+    Long guestId,    // Solo para huésped
+    BookingStatus status,
+
+    @PastOrPresent(message = "La fecha de inicio no puede ser futura")
+    LocalDate start,
+
+    @FutureOrPresent(message = "La fecha de fin debe ser hoy o una fecha futura")
+    LocalDate end
+
+) {}

@@ -14,9 +14,16 @@ app:
   jwt:
     secret: password123
     expiration-seconds: 86400
+
   pageable:
     default-page-size: 20
     index-default: 0
+
+  email:
+    host: smtp.gmail.com
+    port: 587
+    username: emailsendergordito@gmail.com # Gordito123@
+    password: ypcb qbzo bkhi uxyt
 
 springdoc:
   swagger-ui:

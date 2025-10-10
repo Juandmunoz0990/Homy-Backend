@@ -15,16 +15,14 @@ import co.edu.uniquindio.application.Dtos.booking.BookingSummaryDTO;
 import co.edu.uniquindio.application.Security.CustomUserDetails;
 import co.edu.uniquindio.application.Services.BookingService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/bookings")
 public class BookingController {
 
     private final BookingService bookingService;
-
-    public BookingController(BookingService bookingService) {
-        this.bookingService = bookingService;
-    }
 
     /**
      * Save a new booking
@@ -49,20 +47,20 @@ public class BookingController {
      * Search bookings with filters. Hosts see bookings for their housings, guests see only their bookings.
      */
     @GetMapping("/search") //Example: GET /bookings/search?page=2
-    public ResponseEntity<Page<BookingSummaryDTO>> searchBookings(
+    public ResponseEntity<ResponseDTO<Page<BookingSummaryDTO>>> searchBookings(
             @AuthenticationPrincipal CustomUserDetails user,
             @ModelAttribute BookingFilterDTO filter,
             Pageable pageable) {
         
         Page<BookingSummaryDTO> bookings = bookingService.searchBookings(user, filter, pageable);
-        return ResponseEntity.ok(bookings);
+        return ResponseEntity.ok(new ResponseDTO<>(true, bookings));
     }
 
     /**
      * Get a booking by its id
      */
     @GetMapping("/{id}")
-    public ResponseEntity<BookingDetailDTO> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(bookingService.findBookingDetailById(id));
+    public ResponseEntity<ResponseDTO<BookingDetailDTO>> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(new ResponseDTO<>(true, bookingService.findBookingDetailById(id)));
     }
 }
