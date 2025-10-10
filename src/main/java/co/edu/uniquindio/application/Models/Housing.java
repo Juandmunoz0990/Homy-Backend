@@ -12,6 +12,10 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Housing {
+
+    public static final String STATE_ACTIVE = "active";
+    public static final String STATE_DELETED = "deleted";
+   
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -25,9 +29,11 @@ public class Housing {
     private Double lenght;
     private Double nightPrice;
     private Integer maxCapacity;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
     private List<ServicesEnum> services;
-    private String principalImage;
-    private String state = "active";
+    private List<String> images;
+    private String state = STATE_ACTIVE;
     private Double averageRating;
     @OneToMany
     private List<Booking> bookingsList;

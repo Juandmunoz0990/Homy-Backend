@@ -40,6 +40,9 @@ dependencies {
     implementation 'org.mapstruct:mapstruct:1.6.3'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
 
+    // Cloudinary para gestion de imagenes
+    implementation 'com.cloudinary:cloudinary-http5:2.3.0'
+
     // Runtime DB para pruebas
     runtimeOnly 'com.h2database:h2'
 

@@ -2,6 +2,8 @@ package co.edu.uniquindio.application.Services.impl;
 
 import org.hibernate.ObjectNotFoundException;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -10,19 +12,23 @@ import co.edu.uniquindio.application.Dtos.Generic.EntityChangedResponse;
 import co.edu.uniquindio.application.Dtos.Generic.EntityCreatedResponse;
 import co.edu.uniquindio.application.Dtos.Housing.Requests.CreateOrEditHousingRequest;
 import co.edu.uniquindio.application.Dtos.Housing.Responses.SummaryHousingResponse;
+import co.edu.uniquindio.application.Exception.HousingUndeletedException;
 import co.edu.uniquindio.application.Models.Housing;
 import co.edu.uniquindio.application.Repositories.HousingRepository;
+import co.edu.uniquindio.application.Services.BookingService;
 import co.edu.uniquindio.application.Services.HousingService;
 import co.edu.uniquindio.application.mappers.HousingMapper;
 
 import java.time.Instant;
 import java.time.LocalDate;
 
-
+@Service
+@Transactional
 public class HousingServiceImpl implements HousingService {
 
     private final HousingRepository housingRepository;
     private final HousingMapper housingMapper;
+    private final BookingService bookingService;
 
     @Value("${spring.pageable.default-page-size}")
     private int PAGE_SIZE;
@@ -33,9 +39,10 @@ public class HousingServiceImpl implements HousingService {
     private static final LocalDate CHECK_IN_DEFAULT = LocalDate.now();
     private static final LocalDate CHECK_OUT_DEFAULT = LocalDate.now().plusDays(1);
 
-    public HousingServiceImpl(HousingRepository housingRepository, HousingMapper housingMapper) {
+    public HousingServiceImpl(HousingRepository housingRepository, HousingMapper housingMapper, BookingService bookingService) {
         this.housingRepository = housingRepository;
         this.housingMapper = housingMapper;
+        this.bookingService = bookingService;
     }
 
     @Override
@@ -51,7 +58,11 @@ public class HousingServiceImpl implements HousingService {
         if (!existsHousing(housingId, hostId)) {
             throw new ObjectNotFoundException("Housing with id: " + housingId + " and hostId: " + hostId + " not found", Housing.class);
         }
-        housingRepository.deleteById(housingId);
+
+        if (bookingService.existsFutureBookingsForHousing(housingId)) {
+            throw new HousingUndeletedException("Housing with id: " + housingId + "and hostId: " + hostId + " has pending bookings");
+        }
+        housingRepository.softDeleteByIdAndHostId(housingId, hostId);;
         return new EntityChangedResponse("Housing deleted successfully", Instant.now());
     }
 
@@ -67,6 +78,7 @@ public class HousingServiceImpl implements HousingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<SummaryHousingResponse> getHousingsByFilters(String city, LocalDate checkIn, LocalDate checkOut,
                                                              Integer minPrice, Integer maxPrice, Integer indexPage) {
 
@@ -84,6 +96,7 @@ public class HousingServiceImpl implements HousingService {
     }
 
     @Override
+     @Transactional(readOnly = true)
     public Housing findById(Long id) {
         return housingRepository.findById(id)
                 .orElseThrow(() -> new ObjectNotFoundException("Housing with id: " + id + " not found", Housing.class));
