@@ -15,26 +15,28 @@ import co.edu.uniquindio.application.Models.Housing;
 @Repository
 public interface HousingRepository extends JpaRepository<Housing, Long> {
 
-    @Query("""
-        SELECT h 
-        FROM Housing h 
-        WHERE (:city IS NULL OR LOWER(h.city) = LOWER(:city))
-          AND (:totalGuests IS NULL OR h.maxCapacity >= :totalGuests)
-          AND h.state = 'active'
-          AND NOT EXISTS (
-                SELECT b 
-                FROM Booking b 
-                WHERE b MEMBER OF h.bookingsList
-                  AND (
-                       (b.checkIn <= :checkOut AND b.checkOut >= :checkIn)
-                  )
-          )
-        """)
-    Page<Housing> findHousingsByFilters(@Param("city") String city,
-                                        @Param("checkIn") LocalDate checkIn,
-                                        @Param("checkOut") LocalDate checkOut,
-                                        @Param("totalGuests") Integer totalGuests,
-                                        Pageable pageable);
+  @Query("""
+      SELECT h
+      FROM Housing h
+      WHERE (:city IS NULL OR LOWER(h.city) = LOWER(:city))
+        AND (:minPrice IS NULL OR h.pricePerNight >= :minPrice)
+        AND (:maxPrice IS NULL OR h.pricePerNight <= :maxPrice)
+        AND h.state = 'active'
+        AND NOT EXISTS (
+              SELECT b
+              FROM Booking b
+              WHERE b MEMBER OF h.bookingsList
+                AND (
+                     (b.checkIn <= :checkOut AND b.checkOut >= :checkIn)
+                )
+        )
+      """)
+  Page<Housing> findHousingsByFilters(@Param("city") String city,
+      @Param("checkIn") LocalDate checkIn,
+      @Param("checkOut") LocalDate checkOut,
+      @Param("minPrice") Integer minPrice,
+      @Param("maxPrice") Integer maxPrice,
+      Pageable pageable);
 
-    Boolean existsByIdAndHostId(Long housingId, Long hostId);
+  Boolean existsByIdAndHostId(Long housingId, Long hostId);
 }

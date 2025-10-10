@@ -20,7 +20,9 @@ La aplicación busca ofrecer una experiencia similar a la de plataformas reconoc
 
 - Juan Pablo Rodríguez  
 - Miguel Angel Vasquez
-- Juan David Muñoz 
+- Juan David Muñoz
+- Juan Felipe Hurtado (Ingeniería de Software II)
+- Sebastián Agudelo (Ingeniería de Software II)
 
 ## Observaciones:
 - Hacer exception handler de todas las excepciones.
