@@ -32,7 +32,7 @@ public class BookingController {
     @PostMapping
     public ResponseEntity<ResponseDTO<String>> save(@Valid @RequestBody BookingCreateDTO r) {
         bookingService.save(r);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseDTO<>(false, "Booking created successfully"));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseDTO<>(true, "Booking created successfully"));
     }
     
     /**

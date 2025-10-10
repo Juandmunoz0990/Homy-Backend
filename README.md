@@ -12,7 +12,7 @@ La aplicación busca ofrecer una experiencia similar a la de plataformas reconoc
 - **Frontend:** React / Next.js, TailwindCSS  
 - **Backend:** Spring Boot, JPA, MySQL  
 - **Autenticación:** Spring Security con JWT  
-- **Infraestructura:** Monorepo con integración frontend-backend  
+- **Infraestructura:** Monorepo con integración frontend-backend
 
 ---
 
