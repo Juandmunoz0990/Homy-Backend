@@ -1,9 +1,15 @@
 package co.edu.uniquindio.application.Dtos.auth;
 
-import lombok.Data;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
-@Data
-public class LoginRequest {
-    private String email;
-    private String password;
-}
+public record LoginRequest(
+
+    @NotBlank(message = "El correo electrónico es obligatorio")
+    @Email(message = "Debe proporcionar un correo electrónico válido")
+    String email,
+
+    @NotBlank(message = "La contraseña es obligatoria")
+    String password
+
+) {}

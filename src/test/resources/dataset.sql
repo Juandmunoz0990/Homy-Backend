@@ -27,3 +27,11 @@ INSERT INTO bookings (id, housing_id, guest_id, check_in, check_out, guests_numb
 (3, 3, 2, '2025-09-15', '2025-09-20', 3, 'COMPLETED', 750000, NOW()),
 (4, 4, 5, '2025-08-10', '2025-08-15', 1, 'CANCELED', 0, NOW()),
 (5, 5, 2, '2025-12-05', '2025-12-10', 5, 'CONFIRMED', 1500000, NOW());
+
+INSERT INTO host_details (user_id, description, legal_documents_url)
+VALUES
+(1, 'Host con experiencia en turismo ecológico. Ofrece casas rurales en zonas de montaña.', 'docs/host1_licencia.pdf'),
+(2, 'Anfitriona especializada en alojamientos familiares cerca de la playa.', 'docs/host2_registro.pdf'),
+(3, 'Propietario con múltiples apartamentos amoblados en el centro de la ciudad.', 'docs/host3_doc.pdf'),
+(4, 'Anfitriona con enfoque en turismo sostenible y experiencias gastronómicas locales.', 'docs/host4_certificado.pdf'),
+(5, 'Host que ofrece alojamiento en fincas con actividades al aire libre.', 'docs/host5_licencia.pdf');

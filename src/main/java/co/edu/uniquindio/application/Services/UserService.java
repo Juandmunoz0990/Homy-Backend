@@ -1,8 +1,9 @@
 package co.edu.uniquindio.application.Services;
 
 
-import co.edu.uniquindio.application.Dtos.User.Requests.SetUserProfileRequest;
-import co.edu.uniquindio.application.Dtos.User.Responses.SetUserProfileResponse;
+import co.edu.uniquindio.application.Dtos.User.HostDetailsUpdateDTO;
+import co.edu.uniquindio.application.Dtos.User.UserResponseDTO;
+import co.edu.uniquindio.application.Dtos.User.UserUpdateDTO;
 import co.edu.uniquindio.application.Dtos.auth.RegisterRequest;
 import co.edu.uniquindio.application.Models.User;
 
@@ -13,6 +14,11 @@ public interface UserService {
 
     User findById(Long id);
 
-    SetUserProfileResponse setUserProfile (Long id, SetUserProfileRequest request);
+    UserResponseDTO updateUser(Long userId, UserUpdateDTO dto);
 
+    UserResponseDTO updateHostInfo(Long userId, HostDetailsUpdateDTO dto);
+
+    String generateResetCode(String email);
+
+    boolean validateResetCode(String email, String code);
 }

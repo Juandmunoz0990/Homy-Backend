@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.util.Date;
 
+import co.edu.uniquindio.application.Models.enums.Role;
+
 @Entity 
 @Table(name = "users")
 @Data
@@ -22,8 +24,5 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
     private Date birthDate;
-
-    public enum Role {
-        HOST, GUEST, ADMIN;
-    }
+    private String profileImage;
 }

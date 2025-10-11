@@ -22,6 +22,16 @@ import jakarta.servlet.http.HttpServletRequest;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ResponseDTO<ErrorResponse>> handleException(Exception ex, HttpServletRequest request) {
+        return buildError(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ResponseDTO<ErrorResponse>> handleIllegalArgumentException(IllegalArgumentException ex, HttpServletRequest request) {
+        return buildError(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
+    }
+
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ResponseDTO<ErrorResponse>> handleIllegalStateException(IllegalStateException ex, HttpServletRequest request) {
         return buildError(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());

@@ -33,6 +33,7 @@ public class Housing {
     @Enumerated(EnumType.STRING)
     private List<ServicesEnum> services;
     private String principalImage;
+    @Column(columnDefinition = "TEXT")
     private List<String> images;
     private String state = STATE_ACTIVE;
     private Double averageRating;

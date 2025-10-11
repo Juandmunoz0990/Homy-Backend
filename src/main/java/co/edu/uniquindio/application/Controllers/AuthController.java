@@ -35,7 +35,7 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
        try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword())
+                    new UsernamePasswordAuthenticationToken(req.email(), req.password())
             );
 
             String token = jwtUtil.generateToken(authentication);
