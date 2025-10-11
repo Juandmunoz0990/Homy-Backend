@@ -1,6 +1,9 @@
 package co.edu.uniquindio.application.Models;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import java.time.LocalDateTime;
 
@@ -14,12 +17,17 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long reservaId; // Opcional
+    private Long bookingId; // Opcional
     private Long guestId;
     private Long housingId;
+    @Min(1)
+    @Max(5)
     private Integer rate; // (1-5)
     @Column(columnDefinition = "TEXT")
-    private String comment;
+    @Size(max = 500)
+    private String content;
+    @Size(max = 500)
+    @Column(columnDefinition = "TEXT")
+    private String hostReply;
     private LocalDateTime createdAt = LocalDateTime.now();
-    private String hostResponse;
 }

@@ -7,5 +7,5 @@ import co.edu.uniquindio.application.Models.Comment;
 import java.util.List;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
-    List<Comment> findByHousingIdOrderByCreatedAtDesc(Long alojamientoId);
+    List<Comment> findByHousingIdOrderByCreatedAtDesc(Long housingId);
 }

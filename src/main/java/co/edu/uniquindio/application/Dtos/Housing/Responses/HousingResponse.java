@@ -3,6 +3,7 @@ package co.edu.uniquindio.application.Dtos.Housing.Responses;
 import java.util.List;
 
 import co.edu.uniquindio.application.Models.Booking;
+import co.edu.uniquindio.application.Models.Comment;
 import co.edu.uniquindio.application.Models.enums.ServicesEnum;
 import lombok.Data;
 
@@ -20,6 +21,7 @@ public class HousingResponse {
     private List<String> images;
     private Double averageRating;
     private List<Booking> bookingsList;
+    private List<Comment> commentsList;
     private String hostName;
 }
 
