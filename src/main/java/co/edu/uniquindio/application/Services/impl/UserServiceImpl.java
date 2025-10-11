@@ -1,28 +1,36 @@
 package co.edu.uniquindio.application.Services.impl;
 
 import org.hibernate.ObjectNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import co.edu.uniquindio.application.Dtos.User.Requests.SetUserProfileRequest;
 import co.edu.uniquindio.application.Dtos.User.Responses.SetUserProfileResponse;
+import co.edu.uniquindio.application.Dtos.auth.RegisterRequest;
 import co.edu.uniquindio.application.Models.User;
 import co.edu.uniquindio.application.Repositories.UserRepository;
 import co.edu.uniquindio.application.Services.UserService;
+import co.edu.uniquindio.application.mappers.UserMapper;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository repo;
-
-    public UserServiceImpl(UserRepository repo) {
-        this.repo = repo;
-    }
+    private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
     @Override
-    public User register(User u) {
-        // Hash de contraseña simple (NO para producción): guardar en claro aquí por
-        // simplicidad
-        return repo.save(u);
+    public User register(RegisterRequest u) {
+        boolean exists = repo.findByEmail(u.getEmail()).isPresent();
+        if(exists) throw new IllegalArgumentException("Email already in use");
+
+        String pasEncode = passwordEncoder.encode(u.getPassword());
+        u.setPassword(pasEncode);
+        User user = userMapper.toUser(u);
+        
+        return repo.save(user);
     }
 
     @Override

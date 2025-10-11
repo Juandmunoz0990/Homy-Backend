@@ -1,12 +1,24 @@
 package co.edu.uniquindio.application.Security;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.Claims;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import javax.crypto.SecretKey;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtParser;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JwtUtil {
@@ -20,16 +32,30 @@ public class JwtUtil {
     public String generateToken(Authentication auth) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + expirationSeconds * 1000);
+
+        List<String> roles = auth.getAuthorities().stream()
+            .map(grantedAuthority -> grantedAuthority.getAuthority())
+            .toList();
+        Map<String, Object> claims = Map.of("roles", roles);
+
         return Jwts.builder()
-                .setSubject(auth.getName())
-                .claim("userId", ((CustomUserDetails) auth.getPrincipal()).getId())
-                .setIssuedAt(now)
-                .setExpiration(exp)
-                .signWith(SignatureAlgorithm.HS256, secret)
+                .claims(claims)
+                .subject(((User)auth.getPrincipal()).getUsername().toString()) //-> El username es el id (según UserDetailsService), castear CustomUserDetails?
+                .issuedAt(now)
+                .expiration(exp)
+                .signWith(getKey())
                 .compact();
     }
 
-    public Claims parseToken(String token) {
-        return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+    public Jws<Claims> parseJwt(String jwtString) throws ExpiredJwtException,
+            UnsupportedJwtException, MalformedJwtException, IllegalArgumentException {
+        JwtParser jwtParser = Jwts.parser().verifyWith(getKey()).build();
+        return jwtParser.parseSignedClaims(jwtString);
+    }
+
+    private SecretKey getKey(){
+        String secretKey = "secretsecretsecretsecretsecretsecretsecretsecret";
+        byte[] secretKeyBytes = secretKey.getBytes();
+        return Keys.hmacShaKeyFor(secretKeyBytes);
     }
 }

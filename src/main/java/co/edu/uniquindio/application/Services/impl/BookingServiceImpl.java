@@ -20,7 +20,6 @@ import co.edu.uniquindio.application.Models.User;
 import co.edu.uniquindio.application.Models.enums.BookingStatus;
 import co.edu.uniquindio.application.Repositories.BookingRepository;
 import co.edu.uniquindio.application.Repositories.HousingRepository;
-import co.edu.uniquindio.application.Security.CustomUserDetails;
 import co.edu.uniquindio.application.Services.BookingService;
 import co.edu.uniquindio.application.Services.EmailService;
 import co.edu.uniquindio.application.Services.UserService;
@@ -122,18 +121,19 @@ public class BookingServiceImpl implements BookingService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<BookingSummaryDTO> searchBookings(CustomUserDetails user, BookingFilterDTO f, Pageable pageable) {
-        if (user.hasRole("HOST")) {
+    public Page<BookingSummaryDTO> searchBookings(org.springframework.security.core.userdetails.User user, BookingFilterDTO f, Pageable pageable) {
+        Long userId = user.getUsername() != null ? Long.parseLong(user.getUsername()) : null;
+        if (user.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals("HOST"))) {
             //Lógica para que el host vea las reservas de solo sus alojamientos
             if (f.housingId() != null) {
-                if (!housingRepository.existsByIdAndHostId(f.housingId(), user.getId())) {
+                if (!housingRepository.existsByIdAndHostId(f.housingId(), userId)) {
                     throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso para ver las reservas de este alojamiento.");
                 }
             }
         }
-        if (user.hasRole("GUEST")) {
+        if (user.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals("GUEST"))) {
             //Lógica para que el huésped vea solo sus reservas
-            f = new BookingFilterDTO(null, user.getId(), f.status(), f.start(), f.end());
+            f = new BookingFilterDTO(null, userId, f.status(), f.start(), f.end());
         }
         return repo.searchBookings(f.housingId(), f.guestId(), f.status(), f.start(), f.end(), pageable);
     }

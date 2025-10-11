@@ -1,4 +1,4 @@
-package co.edu.uniquindio.application.Dtos;
+package co.edu.uniquindio.application.Dtos.auth;
 
 import lombok.Data;
 

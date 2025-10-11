@@ -1,7 +1,9 @@
 package co.edu.uniquindio.application.Security;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -20,12 +22,18 @@ public class CustomUserDetailsService implements UserDetailsService{
         this.userRepository = userRepository;
     }
 
-     @Override
+    @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con email: " + email));
 
-        SimpleGrantedAuthority scope = new SimpleGrantedAuthority("ROLE_" + user.getRole());
-        return new CustomUserDetails(user, List.of(scope));
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        authorities.add(new SimpleGrantedAuthority(user.getRole().name()));
+
+        return new org.springframework.security.core.userdetails.User(
+                user.getId().toString(),
+                user.getPassword(),
+                authorities
+        );
     }
 }
