@@ -3,7 +3,6 @@ package co.edu.uniquindio.application.Services;
 import java.time.LocalDate;
 
 import org.springframework.data.domain.Page;
-import org.springframework.stereotype.Service;
 
 import co.edu.uniquindio.application.Dtos.Generic.EntityChangedResponse;
 import co.edu.uniquindio.application.Dtos.Generic.EntityCreatedResponse;
@@ -17,7 +16,7 @@ public interface HousingService {
     EntityCreatedResponse create(Long hostId, CreateOrEditHousingRequest request);
     EntityChangedResponse delete(Long housingId, Long hostId);
     EntityChangedResponse edit(Long housingId, Long hostId, CreateOrEditHousingRequest request);
-    // Page<SummaryHousingResponse> getHousingsByFilters(String city, LocalDate checkIn, LocalDate checkOut, Integer totalGuests, Integer minPrice, Integer maxPrice);
+    Page<SummaryHousingResponse> getHousingsByFilters(String city, LocalDate checkIn, LocalDate checkOut, Double minPrice, Double maxPrice, Integer totalGuests);
     HousingResponse getHousingDetail(Long housingId);
     Housing findById(Long id);
     Boolean existsHousing(Long housingId, Long hostId);

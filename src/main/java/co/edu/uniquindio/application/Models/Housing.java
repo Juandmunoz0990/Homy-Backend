@@ -39,5 +39,7 @@ public class Housing {
     private Double averageRating;
     @OneToMany(mappedBy = "housing", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Booking> bookingsList;
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> commentsList;
     private Long hostId;
 }

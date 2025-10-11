@@ -4,7 +4,6 @@ import org.hibernate.ObjectNotFoundException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
@@ -71,23 +70,23 @@ public class HousingServiceImpl implements HousingService {
         return new EntityChangedResponse("Housing updated succesfully", Instant.now());
     }
 
-    // @Override
-    // @Transactional(readOnly = true)
-    // public Page<SummaryHousingResponse> getHousingsByFilters(String city, LocalDate checkIn, LocalDate checkOut,
-    //                                                          Integer minPrice, Integer maxPrice, Integer indexPage) {
+     @Override
+     @Transactional(readOnly = true)
+     public Page<SummaryHousingResponse> getHousingsByFilters(String city, LocalDate checkIn, LocalDate checkOut,
+                                                              Double minPrice, Double maxPrice, Integer indexPage) {
 
-    //     LocalDate dateIn = (checkIn != null) ? checkIn : CHECK_IN_DEFAULT;
-    //     LocalDate dateOut = (checkOut != null) ? checkOut : CHECK_OUT_DEFAULT;
-    //     Integer min = (minPrice != null && minPrice >= 0) ? minPrice : 0;
-    //     Integer max = (maxPrice != null && maxPrice >= 0 && maxPrice != minPrice) ? maxPrice : 50; 
-    //     Integer index = (indexPage != null && indexPage >= 0) ? indexPage : FIRST_PAGE;
+         LocalDate dateIn = (checkIn != null) ? checkIn : CHECK_IN_DEFAULT;
+         LocalDate dateOut = (checkOut != null) ? checkOut : CHECK_OUT_DEFAULT;
+         Double min = (minPrice != null && minPrice >= 0) ? minPrice : 0;
+         Double max = (maxPrice != null && maxPrice >= 0 && maxPrice != minPrice) ? maxPrice : 50; 
+         Integer index = (indexPage != null && indexPage >= 0) ? indexPage : 0;
 
-    //     Pageable pageable = PageRequest.of(index, PAGE_SIZE);
+         Pageable pageable = PageRequest.of(index, 20);
 
-    //     Page<Housing> housings = housingRepository.findHousingsByFilters(city, dateIn, dateOut, min, max, pageable);
+         Page<Housing> housings = housingRepository.findHousingsByFilters(city, dateIn, dateOut, min, max, pageable);
 
-    //     return housings.map(housingMapper::toSummaryHousingResponse);
-    // }
+         return housings.map(housingMapper::toSummaryHousingResponse);
+    }
 
     @Override
 @Transactional(readOnly = true)
