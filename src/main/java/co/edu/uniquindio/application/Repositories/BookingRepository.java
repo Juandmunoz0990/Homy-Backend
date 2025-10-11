@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import co.edu.uniquindio.application.Dtos.booking.BookingDetailDTO;
 import co.edu.uniquindio.application.Dtos.booking.BookingSummaryDTO;
 import co.edu.uniquindio.application.Models.Booking;
 import co.edu.uniquindio.application.Models.enums.BookingStatus;
@@ -69,28 +68,14 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     );
 
     @Query("""
-    SELECT new co.edu.uniquindio.application.Dtos.booking.BookingDetailDTO(
-        b.id,
-        b.checkIn,
-        b.checkOut,
-        b.guestsNumber,
-        b.status,
-        b.totalPrice,
-        b.createdAt,
-        new com.example.booking.dto.BookingDetailDTO$HousingInfo(
-            h.id, h.title, h.description, h.address, h.city,
-            h.nightPrice, h.maxCapacity, h.principalImage, h.averageRating
-        ),
-        new com.example.booking.dto.BookingDetailDTO$GuestInfo(
-            g.id, g.name, g.email, g.phoneNumber
-        )
-        )
-        FROM Booking b
-        JOIN b.housing h
-        JOIN b.guest g
-        WHERE b.id = :id
+    SELECT b
+    FROM Booking b
+    JOIN FETCH b.housing h
+    JOIN FETCH b.guest g
+    WHERE b.id = :id
     """)
-    Optional<BookingDetailDTO> findBookingDetailById(@Param("id") Long id);
+    Optional<Booking> findBookingDetailById(@Param("id") Long id);
+
 
 
     Optional<Booking> findByIdAndGuestId(Long id, Long guestId);

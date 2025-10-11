@@ -51,14 +51,14 @@ public class HousingController {
 
     }
 
-    @GetMapping
-    public ResponseEntity<Page<SummaryHousingResponse>> getHousings(@RequestParam String city,
-            @RequestParam LocalDate checkIn, @RequestParam LocalDate checkOut,
-            @RequestParam Integer minPrice, @RequestParam Integer maxPrice, @RequestParam Integer indexPage) {
-        Page<SummaryHousingResponse> response = service.getHousingsByFilters(city, checkIn, checkOut, minPrice,
-                maxPrice, indexPage);
-        return ResponseEntity.ok(response);
-    }
+    // @GetMapping
+    // public ResponseEntity<Page<SummaryHousingResponse>> getHousings(@RequestParam String city,
+    //         @RequestParam LocalDate checkIn, @RequestParam LocalDate checkOut,
+    //         @RequestParam Integer minPrice, @RequestParam Integer maxPrice, @RequestParam Integer indexPage) {
+    //     Page<SummaryHousingResponse> response = service.getHousingsByFilters(city, checkIn, checkOut, minPrice,
+    //             maxPrice, indexPage);
+    //     return ResponseEntity.ok(response);
+    // }
 
     @GetMapping("/{housingId}")
     public ResponseEntity<HousingResponse> getHousingDetail(@PathVariable Long housingId) {

@@ -25,4 +25,7 @@ La aplicación busca ofrecer una experiencia similar a la de plataformas reconoc
 - Sebastián Agudelo (Ingeniería de Software II)
 
 ## Observaciones:
-- 
+- mockaroo for datasets
+- usar jacoco?
+- comentar pruebas
+- bd para pruebas

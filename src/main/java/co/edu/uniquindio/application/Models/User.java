@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.util.Date;
 
-@Entity
+@Entity 
 @Table(name = "users")
 @Data
 @NoArgsConstructor
@@ -19,6 +19,7 @@ public class User {
     private String email;
     private String password;
     private String phoneNumber;
+    @Enumerated(EnumType.STRING)
     private Role role;
     private Date birthDate;
 

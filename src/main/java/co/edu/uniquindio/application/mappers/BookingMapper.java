@@ -5,7 +5,7 @@ import org.mapstruct.*;
 import co.edu.uniquindio.application.Dtos.booking.BookingCreateDTO;
 import co.edu.uniquindio.application.Models.Booking;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
+@Mapper(componentModel = "spring")
 public interface BookingMapper {
     
 

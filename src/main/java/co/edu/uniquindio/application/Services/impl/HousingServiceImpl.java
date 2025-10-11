@@ -21,12 +21,14 @@ import co.edu.uniquindio.application.Services.BookingService;
 import co.edu.uniquindio.application.Services.HousingService;
 import co.edu.uniquindio.application.Services.UserService;
 import co.edu.uniquindio.application.mappers.HousingMapper;
+import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
 import java.time.LocalDate;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class HousingServiceImpl implements HousingService {
 
     private final HousingRepository housingRepository;
@@ -34,22 +36,8 @@ public class HousingServiceImpl implements HousingService {
     private final BookingService bookingService;
     private final UserService userService;
 
-    @Value("${spring.pageable.default-page-size}")
-    private int PAGE_SIZE;
-
-    @Value("${spring.pageable.index-default}")
-    private int FIRST_PAGE;
-
     private static final LocalDate CHECK_IN_DEFAULT = LocalDate.now();
     private static final LocalDate CHECK_OUT_DEFAULT = LocalDate.now().plusDays(1);
-
-    public HousingServiceImpl(HousingRepository housingRepository, HousingMapper housingMapper, BookingService bookingService,
-    UserService userService) {
-        this.housingRepository = housingRepository;
-        this.housingMapper = housingMapper;
-        this.bookingService = bookingService;
-        this.userService = userService;
-    }
 
     @Override
     public EntityCreatedResponse create(Long hostId, CreateOrEditHousingRequest request) {
@@ -83,23 +71,23 @@ public class HousingServiceImpl implements HousingService {
         return new EntityChangedResponse("Housing updated succesfully", Instant.now());
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Page<SummaryHousingResponse> getHousingsByFilters(String city, LocalDate checkIn, LocalDate checkOut,
-                                                             Integer minPrice, Integer maxPrice, Integer indexPage) {
+    // @Override
+    // @Transactional(readOnly = true)
+    // public Page<SummaryHousingResponse> getHousingsByFilters(String city, LocalDate checkIn, LocalDate checkOut,
+    //                                                          Integer minPrice, Integer maxPrice, Integer indexPage) {
 
-        LocalDate dateIn = (checkIn != null) ? checkIn : CHECK_IN_DEFAULT;
-        LocalDate dateOut = (checkOut != null) ? checkOut : CHECK_OUT_DEFAULT;
-        Integer min = (minPrice != null && minPrice >= 0) ? minPrice : 0;
-        Integer max = (maxPrice != null && maxPrice >= 0 && maxPrice != minPrice) ? maxPrice : 50; 
-        Integer index = (indexPage != null && indexPage >= 0) ? indexPage : FIRST_PAGE;
+    //     LocalDate dateIn = (checkIn != null) ? checkIn : CHECK_IN_DEFAULT;
+    //     LocalDate dateOut = (checkOut != null) ? checkOut : CHECK_OUT_DEFAULT;
+    //     Integer min = (minPrice != null && minPrice >= 0) ? minPrice : 0;
+    //     Integer max = (maxPrice != null && maxPrice >= 0 && maxPrice != minPrice) ? maxPrice : 50; 
+    //     Integer index = (indexPage != null && indexPage >= 0) ? indexPage : FIRST_PAGE;
 
-        Pageable pageable = PageRequest.of(index, PAGE_SIZE);
+    //     Pageable pageable = PageRequest.of(index, PAGE_SIZE);
 
-        Page<Housing> housings = housingRepository.findHousingsByFilters(city, dateIn, dateOut, min, max, pageable);
+    //     Page<Housing> housings = housingRepository.findHousingsByFilters(city, dateIn, dateOut, min, max, pageable);
 
-        return housings.map(housingMapper::toSummaryHousingResponse);
-    }
+    //     return housings.map(housingMapper::toSummaryHousingResponse);
+    // }
 
     @Override
 @Transactional(readOnly = true)

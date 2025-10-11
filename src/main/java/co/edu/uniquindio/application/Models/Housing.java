@@ -32,12 +32,11 @@ public class Housing {
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
     private List<ServicesEnum> services;
+    private String principalImage;
     private List<String> images;
     private String state = STATE_ACTIVE;
     private Double averageRating;
-    @OneToMany
+    @OneToMany(mappedBy = "housing", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Booking> bookingsList;
     private Long hostId;
-
-
 }

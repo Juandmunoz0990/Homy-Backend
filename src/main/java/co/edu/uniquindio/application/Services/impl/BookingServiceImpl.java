@@ -11,6 +11,8 @@ import co.edu.uniquindio.application.Dtos.booking.BookingCreateDTO;
 import co.edu.uniquindio.application.Dtos.booking.BookingDetailDTO;
 import co.edu.uniquindio.application.Dtos.booking.BookingFilterDTO;
 import co.edu.uniquindio.application.Dtos.booking.BookingSummaryDTO;
+import co.edu.uniquindio.application.Dtos.booking.GuestInfo;
+import co.edu.uniquindio.application.Dtos.booking.HousingInfo;
 import co.edu.uniquindio.application.Dtos.email.EmailDTO;
 import co.edu.uniquindio.application.Models.Booking;
 import co.edu.uniquindio.application.Models.Housing;
@@ -21,7 +23,6 @@ import co.edu.uniquindio.application.Repositories.HousingRepository;
 import co.edu.uniquindio.application.Security.CustomUserDetails;
 import co.edu.uniquindio.application.Services.BookingService;
 import co.edu.uniquindio.application.Services.EmailService;
-import co.edu.uniquindio.application.Services.HousingService;
 import co.edu.uniquindio.application.Services.UserService;
 import co.edu.uniquindio.application.mappers.BookingMapper;
 import jakarta.persistence.EntityNotFoundException;
@@ -39,7 +40,6 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRepository repo;
     private final BookingMapper mapper;
     private final HousingRepository housingRepository;
-    private final HousingService housingService;
     private final EmailService emailService;
     private final UserService userService;
 
@@ -77,7 +77,11 @@ public class BookingServiceImpl implements BookingService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to send email", e);
         }
-        return repo.save(mapper.toBooking(b));
+        Booking booking = mapper.toBooking(b);
+        booking.setHousing(housing);
+        booking.setGuest(guest);
+
+        return repo.save(booking);
     }
 
     /**
@@ -122,7 +126,7 @@ public class BookingServiceImpl implements BookingService {
         if (user.hasRole("HOST")) {
             //Lógica para que el host vea las reservas de solo sus alojamientos
             if (f.housingId() != null) {
-                if (!housingService.existsHousing(f.housingId(), user.getId())) {
+                if (!housingRepository.existsByIdAndHostId(f.housingId(), user.getId())) {
                     throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso para ver las reservas de este alojamiento.");
                 }
             }
@@ -138,12 +142,36 @@ public class BookingServiceImpl implements BookingService {
      * Find a booking by its id.
      */
     @Override
-    @Transactional(readOnly = true)
-    public BookingDetailDTO findBookingDetailById(Long id) {
-        BookingDetailDTO detail = repo.findBookingDetailById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Booking not found for the given id."));
-        return detail;
-    }
+public BookingDetailDTO findBookingDetailById(Long id) {
+    return repo.findBookingDetailById(id)
+        .map(b -> new BookingDetailDTO(
+            b.getId(),
+            b.getCheckIn(),
+            b.getCheckOut(),
+            b.getGuestsNumber(),
+            b.getStatus(),
+            b.getTotalPrice(),
+            b.getCreatedAt(),
+            new HousingInfo(
+                b.getHousing().getId(),
+                b.getHousing().getTitle(),
+                b.getHousing().getDescription(),
+                b.getHousing().getAddress(),
+                b.getHousing().getCity(),
+                b.getHousing().getNightPrice(),
+                b.getHousing().getMaxCapacity(),
+                b.getHousing().getPrincipalImage(),
+                b.getHousing().getAverageRating()
+            ),
+            new GuestInfo(
+                b.getGuest().getId(),
+                b.getGuest().getName(),
+                b.getGuest().getEmail(),
+                b.getGuest().getPhoneNumber()
+            )
+        )).orElseThrow(() -> new EntityNotFoundException("Booking not found"));
+}
+
 
     /**
      * Check if there are active or future bookings for a given housing. For housing service.

@@ -2,8 +2,6 @@ package co.edu.uniquindio.application.Dtos.booking;
 
 import java.time.LocalDate;
 
-import co.edu.uniquindio.application.Models.enums.BookingStatus;
-
 import jakarta.validation.constraints.*;
 
 public record BookingCreateDTO(
@@ -26,9 +24,6 @@ public record BookingCreateDTO(
     @Min(value = 1, message = "Debe haber al menos un huésped")
     @Max(value = 10, message = "No se permiten más de 10 huéspedes por reserva")
     Integer guestsNumber,
-
-    @NotNull(message = "El estado de la reserva es obligatorio")
-    BookingStatus state,
 
     @NotNull(message = "El precio total es obligatorio")
     @Positive(message = "El precio total debe ser un valor positivo")

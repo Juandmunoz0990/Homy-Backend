@@ -36,6 +36,7 @@ public class Booking {
     private Integer guestsNumber;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private BookingStatus status;
 
     @Column(nullable = false)
