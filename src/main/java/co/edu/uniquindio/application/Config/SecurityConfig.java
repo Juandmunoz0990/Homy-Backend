@@ -42,21 +42,26 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
-        return http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(
-                        auth -> auth.requestMatchers("/auth/**").permitAll().anyRequest().authenticated())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(authenticationEntryPoint())
-                        .accessDeniedHandler(accessDeniedHandler()))
-                .httpBasic(Customizer.withDefaults())
-                .build();
-    }
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    return http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(
+                    auth -> auth
+                            // .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()  // Primero: permite todos los error dispatches
+                            // .requestMatchers("/error").permitAll()  // Permite /error explícitamente
+                            .requestMatchers("/users/forgot-password", "/users/verify-code", "/users/reset-password").permitAll()
+                            .requestMatchers("/auth/**").permitAll()
+                            .anyRequest().permitAll()
+            )
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+            .exceptionHandling(ex -> ex
+                    .authenticationEntryPoint(authenticationEntryPoint())
+                    .accessDeniedHandler(accessDeniedHandler()))
+            .httpBasic(Customizer.withDefaults())
+            .build();
+}
 
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
@@ -91,7 +96,7 @@ public class SecurityConfig {
         return (request, response, authException) -> writeErrorResponse(request, response,
                 HttpServletResponse.SC_UNAUTHORIZED,
                 "Unauthorized",
-                "Invalid or expired JWT");
+                "Invalid or expired JWT from API");
     }
 
     @Bean

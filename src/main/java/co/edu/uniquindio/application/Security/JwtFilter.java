@@ -66,8 +66,8 @@ public class JwtFilter extends OncePerRequestFilter{
             }
         } catch (Exception e) {
             // Si el token no es válido, enviar un error 401
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
-            return;
+            // response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+            // return;
         }
         
         // Continuar con la cadena de filtros

@@ -8,6 +8,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
+    defer-datasource-initialization: true
     hibernate:
       ddl-auto: update   # otras opciones: none, validate, create, create-drop
     show-sql: true       # muestra las consultas en consola

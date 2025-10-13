@@ -5,12 +5,12 @@ INSERT INTO users (id, name, email, password, phone_number, role, birth_date) VA
 (4, 'Laura Martínez', 'laura@gmail.com', 'pass111', '3207774444', 'HOST', '1993-09-18'),
 (5, 'Julián Pérez', 'julian@gmail.com', 'pass222', '3156667777', 'GUEST', '1998-12-30');
 
-INSERT INTO housings (id, title, description, city, address, latitude, length, night_price, max_capacity, images, state, average_rating, host_id) VALUES
-(1, 'Casa Colonial en Cartagena', 'Hermosa casa cerca del mar con piscina y WiFi.', 'Cartagena', 'Calle 10 #5-30', 10.4236, -75.5253, 250000, 6, '["img1.jpg", "img2.jpg"]', 'active', 4.7, 1),
-(2, 'Apartamento Moderno en Bogotá', 'Apartamento moderno con vista a la ciudad.', 'Bogotá', 'Cra 45 #26-50', 4.6097, -74.0817, 180000, 4, '["apt1.jpg", "apt2.jpg"]', 'active', 4.5, 1),
-(3, 'Cabaña en el Eje Cafetero', 'Cabaña acogedora rodeada de naturaleza.', 'Armenia', 'Km 5 vía Montenegro', 4.5173, -75.7030, 150000, 5, '["cab1.jpg", "cab2.jpg"]', 'active', 4.8, 4),
-(4, 'Hostal en Medellín', 'Habitaciones privadas y compartidas en zona céntrica.', 'Medellín', 'Carrera 70 #44-10', 6.2442, -75.5812, 90000, 10, '["host1.jpg", "host2.jpg"]', 'active', 4.2, 4),
-(5, 'Casa de Playa en Santa Marta', 'Casa frente al mar con piscina y desayuno incluido.', 'Santa Marta', 'Calle 1 #12-20', 11.2408, -74.1990, 300000, 8, '["sm1.jpg", "sm2.jpg"]', 'active', 4.9, 1);
+INSERT INTO housings (id, title, description, city, address, latitude, length, night_price, max_capacity, state, average_rating, host_id) VALUES
+(1, 'Casa Colonial en Cartagena', 'Hermosa casa cerca del mar con piscina y WiFi.', 'Cartagena', 'Calle 10 #5-30', 10.4236, -75.5253, 250000, 6, 'active', 4.7, 1),
+(2, 'Apartamento Moderno en Bogotá', 'Apartamento moderno con vista a la ciudad.', 'Bogotá', 'Cra 45 #26-50', 4.6097, -74.0817, 180000, 4, 'active', 4.5, 1),
+(3, 'Cabaña en el Eje Cafetero', 'Cabaña acogedora rodeada de naturaleza.', 'Armenia', 'Km 5 vía Montenegro', 4.5173, -75.7030, 150000, 5, 'active', 4.8, 4),
+(4, 'Hostal en Medellín', 'Habitaciones privadas y compartidas en zona céntrica.', 'Medellín', 'Carrera 70 #44-10', 6.2442, -75.5812, 90000, 10, 'active', 4.2, 4),
+(5, 'Casa de Playa en Santa Marta', 'Casa frente al mar con piscina y desayuno incluido.', 'Santa Marta', 'Calle 1 #12-20', 11.2408, -74.1990, 300000, 8, 'active', 4.9, 1);
 
 INSERT INTO housing_services (housing_id, services)
 VALUES 

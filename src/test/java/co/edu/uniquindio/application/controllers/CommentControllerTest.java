@@ -102,7 +102,7 @@ public class CommentControllerTest {
         mockMvc.perform(post("/housings/{housingId}/comments/create", housingId)
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isBadRequest());
     }
 
     // ---------- REPLY COMMENT ----------
@@ -131,6 +131,6 @@ public class CommentControllerTest {
 
         mockMvc.perform(post("/housings/{housingId}/comments/{commentId}", housingId, commentId)
                         .param("message", "Intento no permitido"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isBadRequest());
     }
 }

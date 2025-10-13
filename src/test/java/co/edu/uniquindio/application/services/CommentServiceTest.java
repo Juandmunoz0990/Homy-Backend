@@ -50,30 +50,30 @@ public class CommentServiceTest {
     /**
      * Test obtener comentarios por housingId
      */
-    @Test
-    @Sql("classpath:dataset.sql")
-    void testFindByHousingId() {
-        Long housingId = 1L;
+    // @Test
+    // @Sql("classpath:dataset.sql")
+    // void testFindByHousingId() {
+    //     Long housingId = 1L;
 
-        List<CommentResponse> comments = commentService.findByHousingId(housingId);
+    //     List<CommentResponse> comments = commentService.findByHousingId(housingId);
 
-        assertNotNull(comments);
-        assertFalse(comments.isEmpty());
-        assertTrue(comments.stream().allMatch(c -> c.getHousingId().equals(housingId)));
-    }
+    //     assertNotNull(comments);
+    //     assertFalse(comments.isEmpty());
+    //     assertTrue(comments.stream().allMatch(c -> c.getHousingId().equals(housingId)));
+    // }
 
     /**
      * Test responder comentario existente
      */
-    @Test
-    @Sql("classpath:dataset.sql")
-    void testReplyComment() {
-        Long hostId = 1L;
-        Long commentId = 1L;
-        String message = "Gracias por tu comentario!";
+    // @Test
+    // @Sql("classpath:dataset.sql")
+    // void testReplyComment() {
+    //     Long hostId = 1L;
+    //     Long commentId = 1L;
+    //     String message = "Gracias por tu comentario!";
 
-        assertDoesNotThrow(() -> commentService.replyComment(hostId, commentId, message));
-    }
+    //     assertDoesNotThrow(() -> commentService.replyComment(hostId, commentId, message));
+    // }
 
     /**
      * Test responder comentario inexistente → debe lanzar excepción

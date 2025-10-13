@@ -6,7 +6,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -24,8 +23,9 @@ import co.edu.uniquindio.application.Repositories.PasswordResetTokenRepository;
 import co.edu.uniquindio.application.Repositories.UserRepository;
 import co.edu.uniquindio.application.Services.EmailService;
 import co.edu.uniquindio.application.Services.UserService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/users")
@@ -34,29 +34,33 @@ public class UserController {
 
     private final UserService userService;
     private final EmailService emailService;
-    private final PasswordEncoder passwordEncoder;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
     private final PasswordResetTokenRepository tokenRepository;
     private final UserRepository userRepository;
 
+    /**
+     * Update basic user data
+     */
     @PutMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> updateUser(
-            @AuthenticationPrincipal org.springframework.security.core.userdetails.User user,
-            @Valid @RequestBody UserUpdateDTO dto) {
+    public ResponseEntity<UserResponseDTO> updateUser(@AuthenticationPrincipal org.springframework.security.core.userdetails.User user, @Valid @RequestBody UserUpdateDTO dto) {
         Long id = user.getUsername() != null ? Long.parseLong(user.getUsername()) : null;
         return ResponseEntity.ok(userService.updateUser(id, dto));
     }
 
+    /**
+     * Update host info
+     */
     @PutMapping("/{id}/host-info")
-    public ResponseEntity<UserResponseDTO> updateHostInfo(
-            @AuthenticationPrincipal org.springframework.security.core.userdetails.User user,
-            @Valid @RequestBody HostDetailsUpdateDTO dto) {
+    public ResponseEntity<UserResponseDTO> updateHostInfo(@AuthenticationPrincipal org.springframework.security.core.userdetails.User user, @Valid @RequestBody HostDetailsUpdateDTO dto) {
         Long id = user.getUsername() != null ? Long.parseLong(user.getUsername()) : null;
         return ResponseEntity.ok(userService.updateHostInfo(id, dto));
     }
 
-    @PostMapping("/forgot-password") // Enviar email para restablecer contraseña
+    /**
+     * Send reset password code by email
+     */
+    @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> email) throws Exception {
-
         String emailValue = email.get("email");
         User user = userService.findByEmail(emailValue);
 
@@ -67,7 +71,6 @@ public class UserController {
         }
 
         String code = userService.generateResetCode(emailValue);
-
         emailService.sendMail(new EmailDTO("Reset code", code, emailValue));
 
         return ResponseEntity.ok()
@@ -75,7 +78,10 @@ public class UserController {
                 .body(Map.of("message", "Código de verificación enviado al correo."));
     }
 
-    @PostMapping("/verify-code") // Verificar si el código es correcto
+    /**
+     * Verify reset code validity
+     */
+    @PostMapping("/verify-code")
     public ResponseEntity<?> verifyCode(@RequestBody Map<String, String> request) {
         String email = request.get("email");
         String code = request.get("code");
@@ -87,17 +93,19 @@ public class UserController {
         return ResponseEntity.ok("Código válido, procede a restablecer tu contraseña.");
     }
 
-    @Transactional // Por el delete del token
-    @PostMapping("/reset-password") // Para cambiar la contraseña
+    /**
+     * Reset user password after verifying code
+     */
+    @Transactional
+    @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody PasswordResetRequest request) {
         if (!userService.validateResetCode(request.getEmail(), request.getCode())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Código inválido o expirado");
-        } // Verifica de nuevo el código
+        }
 
         User user = userService.findByEmail(request.getEmail());
-
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        userRepository.save(user); // Sobreescribe el User con la nueva contraseña
+        userRepository.save(user);
 
         tokenRepository.deleteByEmail(request.getEmail());
 

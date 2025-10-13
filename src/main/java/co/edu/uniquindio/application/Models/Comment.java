@@ -19,7 +19,9 @@ public class Comment {
 
     private Long bookingId; // Opcional
     private Long guestId;
-    private Long housingId;
+    @ManyToOne
+    @JoinColumn(name = "housing_id")
+    private Housing housing;
     @Min(1)
     @Max(5)
     private Integer rate; // (1-5)
