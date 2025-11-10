@@ -42,6 +42,9 @@ Page<Housing> findHousingsByFilters(
 
   Boolean existsByIdAndHostId(Long housingId, Long hostId);
 
+  @Query("SELECT h FROM Housing h WHERE h.hostId = :hostId AND h.state = 'active' ORDER BY h.id DESC")
+  Page<Housing> findByHostId(@Param("hostId") Long hostId, Pageable pageable);
+
   @Modifying
   @Query("UPDATE Housing h SET h.state = 'deleted' WHERE h.id = :housingId AND h.hostId = :hostId")
   void softDeleteByIdAndHostId(@Param("housingId") Long housingId, @Param("hostId") Long hostId);

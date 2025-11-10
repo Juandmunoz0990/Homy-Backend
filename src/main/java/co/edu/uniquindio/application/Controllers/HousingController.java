@@ -60,6 +60,15 @@ public class HousingController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/host/{hostId}")
+    public ResponseEntity<Page<SummaryHousingResponse>> getHousingsByHost(
+            @PathVariable("hostId") Long hostId,
+            @RequestParam(name = "page", defaultValue = "0") Integer page,
+            @RequestParam(name = "size", defaultValue = "10") Integer size) {
+        Page<SummaryHousingResponse> response = service.getHousingsByHost(hostId, page, size);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{housingId}")
     public ResponseEntity<HousingResponse> getHousingDetail(@PathVariable Long housingId) {
         HousingResponse response = service.getHousingDetail(housingId);

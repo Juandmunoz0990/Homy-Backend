@@ -89,6 +89,22 @@ public class HousingServiceImpl implements HousingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Page<SummaryHousingResponse> getHousingsByHost(Long hostId, Integer page, Integer size) {
+        if (hostId == null || hostId <= 0) {
+            throw new IllegalArgumentException("The hostId must be positive");
+        }
+        
+        Integer pageIndex = (page != null && page >= 0) ? page : 0;
+        Integer pageSize = (size != null && size > 0) ? size : 10;
+        
+        Pageable pageable = PageRequest.of(pageIndex, pageSize);
+        Page<Housing> housings = housingRepository.findByHostId(hostId, pageable);
+        
+        return housings.map(housingMapper::toSummaryHousingResponse);
+    }
+
+    @Override
 @Transactional(readOnly = true)
 public HousingResponse getHousingDetail(Long housingId) {
 
