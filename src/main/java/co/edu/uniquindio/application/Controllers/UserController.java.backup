@@ -88,9 +88,9 @@ public class UserController {
 
         boolean valid = userService.validateResetCode(email, code);
         if (!valid)
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Código inválido o expirado"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Código inválido o expirado");
 
-        return ResponseEntity.ok(Map.of("message", "Código válido, procede a restablecer tu contraseña"));
+        return ResponseEntity.ok("Código válido, procede a restablecer tu contraseña.");
     }
 
     /**
@@ -100,7 +100,7 @@ public class UserController {
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody PasswordResetRequest request) {
         if (!userService.validateResetCode(request.getEmail(), request.getCode())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Código inválido o expirado"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Código inválido o expirado");
         }
 
         User user = userService.findByEmail(request.getEmail());
@@ -109,6 +109,6 @@ public class UserController {
 
         tokenRepository.deleteByEmail(request.getEmail());
 
-        return ResponseEntity.ok(Map.of("message", "Contraseña restablecida con éxito"));
+        return ResponseEntity.ok("Contraseña restablecida con éxito.");
     }
 }
