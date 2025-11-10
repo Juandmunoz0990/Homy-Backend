@@ -48,11 +48,9 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(
                     auth -> auth
-                            // .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()  // Primero: permite todos los error dispatches
-                            // .requestMatchers("/error").permitAll()  // Permite /error explícitamente
                             .requestMatchers("/users/forgot-password", "/users/verify-code", "/users/reset-password").permitAll()
                             .requestMatchers("/auth/**").permitAll()
-                            .anyRequest().permitAll()
+                            .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

@@ -2,7 +2,6 @@ package co.edu.uniquindio.application.Controllers;
 
 import java.util.Map;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -15,7 +14,9 @@ import co.edu.uniquindio.application.Models.User;
 import co.edu.uniquindio.application.Security.JwtUtil;
 import co.edu.uniquindio.application.Services.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -33,18 +34,13 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
-       try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(req.email(), req.password())
-            );
+        Authentication authentication = authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(req.email(), req.password())
+        );
 
-            String token = jwtUtil.generateToken(authentication);
-
-            return ResponseEntity.ok(Map.of(
-                    "accessToken", token
-            ));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
-        }
+        String token = jwtUtil.generateToken(authentication);
+        return ResponseEntity.ok(Map.of(
+            "accessToken", token
+        ));
     }
 }

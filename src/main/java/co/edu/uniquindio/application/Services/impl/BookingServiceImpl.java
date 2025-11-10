@@ -47,7 +47,7 @@ public class BookingServiceImpl implements BookingService {
      */
     @Override
     @Transactional
-    public Booking save(BookingCreateDTO b) {
+    public Booking save(BookingCreateDTO b, Long guestId) {
         boolean hasOverlap = repo.existsOverlappingBooking(
             b.housingId(), b.checkIn(), b.checkOut(), List.of(BookingStatus.CONFIRMED));
         if (hasOverlap) throw new IllegalStateException("The housing is not available for the selected dates.");
@@ -63,7 +63,7 @@ public class BookingServiceImpl implements BookingService {
         .orElseThrow(() -> new EntityNotFoundException("Housing not found"));
         if (housing.getMaxCapacity() < b.guestsNumber()) throw new IllegalStateException("Number of guests exceeds housing capacity");
 
-        User guest = userService.findById(b.guestId());
+        User guest = userService.findById(guestId);
         //Enviar correo
         try {
             emailService.sendMail(new EmailDTO(

@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,6 +19,7 @@ import io.jsonwebtoken.Jws;
 
 import java.io.IOException;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter{
@@ -28,12 +30,6 @@ public class JwtFilter extends OncePerRequestFilter{
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
                                     @NonNull FilterChain chain) throws ServletException, IOException {
-        
-        String path = request.getRequestURI();
-        if (path.startsWith("/auth")) {
-            chain.doFilter(request, response);
-            return;
-        }
 
         // Obtener el token del header de la solicitud
         String token = getToken(request);
@@ -47,13 +43,13 @@ public class JwtFilter extends OncePerRequestFilter{
         try {
             // Validar el token y obtener el payload
             Jws<Claims> payload = jwtUtil.parseJwt(token);
-            String username = payload.getPayload().getSubject();
+            String email = payload.getPayload().get("email", String.class);
             
             // Si el usuario no está autenticado, crear un nuevo objeto de autenticación
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 
                 // Crear un objeto UserDetails con el nombre de usuario y el rol
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
                 
                 // Crear un objeto de autenticación y establecerlo en el contexto de seguridad
                 UsernamePasswordAuthenticationToken authentication = new 
@@ -65,9 +61,10 @@ public class JwtFilter extends OncePerRequestFilter{
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception e) {
+            e.printStackTrace();
             // Si el token no es válido, enviar un error 401
-            // response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
-            // return;
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+            return;
         }
         
         // Continuar con la cadena de filtros

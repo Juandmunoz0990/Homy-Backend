@@ -14,6 +14,7 @@ import co.edu.uniquindio.application.Dtos.booking.BookingCreateDTO;
 import co.edu.uniquindio.application.Dtos.booking.BookingDetailDTO;
 import co.edu.uniquindio.application.Dtos.booking.BookingFilterDTO;
 import co.edu.uniquindio.application.Dtos.booking.BookingSummaryDTO;
+import co.edu.uniquindio.application.Security.CustomUserDetails;
 import co.edu.uniquindio.application.Services.BookingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,8 +31,9 @@ public class BookingController {
      */
     @PostMapping
     @PreAuthorize("hasAuthority('GUEST')")
-    public ResponseEntity<ResponseDTO<String>> save(@Valid @RequestBody BookingCreateDTO r) {
-        bookingService.save(r);
+    public ResponseEntity<ResponseDTO<String>> save(@AuthenticationPrincipal CustomUserDetails user,
+        @Valid @RequestBody BookingCreateDTO r) {
+        bookingService.save(r, user.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseDTO<>(true, "Booking created successfully"));
     }
     

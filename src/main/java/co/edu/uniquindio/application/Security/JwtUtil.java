@@ -8,7 +8,6 @@ import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
@@ -32,15 +31,17 @@ public class JwtUtil {
     public String generateToken(Authentication auth) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + expirationSeconds * 1000);
+        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
 
         List<String> roles = auth.getAuthorities().stream()
             .map(grantedAuthority -> grantedAuthority.getAuthority())
             .toList();
-        Map<String, Object> claims = Map.of("roles", roles);
+        Map<String, Object> scope = Map.of("roles", roles);
 
         return Jwts.builder()
-                .claims(claims)
-                .subject(((User)auth.getPrincipal()).getUsername().toString()) //-> El username es el id (según UserDetailsService), castear CustomUserDetails?
+                .claims(scope)
+                .claim("email", userDetails.getEmail())
+                .subject(userDetails.getUsername().toString()) //-> El username es el id (según UserDetailsService), castear CustomUserDetails?
                 .issuedAt(now)
                 .expiration(exp)
                 .signWith(getKey())

@@ -18,7 +18,9 @@ import co.edu.uniquindio.application.Dtos.ResponseDTO;
 import co.edu.uniquindio.application.Dtos.ValidationDTO;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     
@@ -64,6 +66,7 @@ public class GlobalExceptionHandler {
 
     /* For build error method */
     private ResponseEntity<ResponseDTO<ErrorResponse>> buildError(HttpStatus status, String message, String path) {
+        log.info("path: {}, message: {}", path, message);
         ResponseDTO<ErrorResponse> error = new ResponseDTO<>(
             false, ErrorResponse.builder()
             .timestamp(Instant.now())

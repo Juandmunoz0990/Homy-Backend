@@ -11,7 +11,7 @@ import co.edu.uniquindio.application.Models.Booking;
 
 public interface BookingService {
 
-    Booking save(BookingCreateDTO b);
+    Booking save(BookingCreateDTO b, Long guestId);
 
     Page<BookingSummaryDTO> searchBookings(org.springframework.security.core.userdetails.User user, BookingFilterDTO filter, Pageable pageable);
 

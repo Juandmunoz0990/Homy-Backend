@@ -59,7 +59,7 @@ public class BookingServiceTest {
         );
 
         assertDoesNotThrow(() -> {
-            Booking b = bookingService.save(dto);
+            Booking b = bookingService.save(dto, guestId);
             assertNotNull(b.getId());
             assertEquals(housingId, b.getHousing().getId());
             assertEquals(guestId, b.getGuest().getId());
@@ -84,7 +84,7 @@ public class BookingServiceTest {
             housingId, guestId, checkIn, checkOut, 2, 500.0
         );
 
-        assertThrows(IllegalStateException.class, () -> bookingService.save(dto));
+        assertThrows(IllegalStateException.class, () -> bookingService.save(dto, guestId));
     }
 
     /**
@@ -117,7 +117,7 @@ public class BookingServiceTest {
             2,
             300.0
         );
-        Booking b = bookingService.save(dto);
+        Booking b = bookingService.save(dto, guestId);
 
         assertThrows(IllegalStateException.class, () -> bookingService.cancelBooking(b.getId(), guestId));
     }
