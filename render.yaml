@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: homy-backend
+    env: java
+    buildCommand: "./gradlew build -x test"
+    startCommand: "java -jar build/libs/*.jar"

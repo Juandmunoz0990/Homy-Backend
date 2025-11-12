@@ -1,5 +1,5 @@
 server:
-port: 8080
+  port: 8080
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/homy?useSSL=false&serverTimezone=America/Bogota&allowPublicKeyRetrieval=true

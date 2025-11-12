@@ -59,8 +59,10 @@ public class BookingServiceImpl implements BookingService {
         long daysBetween = ChronoUnit.DAYS.between(b.checkIn(), b.checkOut());
         if (daysBetween < 1) throw new IllegalStateException("Booking must be at least one night");
 
-        Housing housing = housingRepository.findById(b.housingId())
-        .orElseThrow(() -> new EntityNotFoundException("Housing not found"));
+        Long housingId = b.housingId();
+        if (housingId == null) throw new IllegalArgumentException("Housing id is required");
+        Housing housing = housingRepository.findById(housingId)
+            .orElseThrow(() -> new EntityNotFoundException("Housing not found"));
         if (housing.getMaxCapacity() < b.guestsNumber()) throw new IllegalStateException("Number of guests exceeds housing capacity");
 
         User guest = userService.findById(guestId);
