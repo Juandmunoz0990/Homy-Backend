@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -48,6 +49,7 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(
                     auth -> auth
+                            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // permitir preflights
                             .requestMatchers("/users/forgot-password", "/users/verify-code", "/users/reset-password").permitAll()
                             .requestMatchers("/auth/**").permitAll()
                             .anyRequest().authenticated()
@@ -77,16 +79,21 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOriginPattern("*"); // ⚠️ Permite todos los orígenes (solo para pruebas)
-        configuration.addAllowedMethod("*"); // Permite GET, POST, PUT, DELETE, OPTIONS
-        configuration.addAllowedHeader("*");
-        configuration.setAllowCredentials(true);
+
+        // Permitir todos los orígenes (útil para pruebas). En producción cambiar por los dominios concretos.
+        configuration.setAllowedOriginPatterns(List.of("*"));
+
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setExposedHeaders(List.of("Authorization", "Set-Cookie"));
+        configuration.setAllowCredentials(true); // si usas cookies o Authorization con credenciales
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 
     @Bean
     public AuthenticationEntryPoint authenticationEntryPoint() {
