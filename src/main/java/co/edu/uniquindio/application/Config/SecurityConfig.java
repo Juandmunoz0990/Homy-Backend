@@ -29,9 +29,11 @@ import co.edu.uniquindio.application.Security.CustomUserDetailsService;
 import co.edu.uniquindio.application.Security.JwtFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @EnableMethodSecurity
+@Slf4j
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
@@ -88,7 +90,7 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-        System.out.println("Allowed origins loaded: " + configuration.getAllowedOrigins());
+        log.info("Allowed origins loaded: " + configuration.getAllowedOrigins());
         return source;
     }
 
