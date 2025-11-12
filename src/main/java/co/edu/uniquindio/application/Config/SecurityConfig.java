@@ -77,7 +77,12 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:4200"));
+        configuration.setAllowedOrigins(List.of(
+            "http://localhost:3000",
+            "http://localhost:4200",
+            "https://homy-app-545ae.web.app",
+            "https://homy-app-545ae.firebaseapp.com"
+        ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-CSRF-Token"));
         configuration.setAllowCredentials(true); // Necesario para cookies
