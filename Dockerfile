@@ -31,4 +31,17 @@ ENV PORT=${PORT}
 COPY --from=build /home/gradle/project/build/libs/*.jar app.jar
 
 EXPOSE ${PORT}
-ENTRYPOINT ["java", "-jar", "app.jar"]
+
+# Limitar memoria de JVM para Railway (512MB plan gratuito)
+# -Xmx: Memoria máxima del heap
+# -Xms: Memoria inicial del heap
+# -XX:MaxMetaspaceSize: Memoria máxima para metaspace
+# -XX:+UseContainerSupport: Detecta límites del contenedor
+ENTRYPOINT ["java", \
+    "-Xms256m", \
+    "-Xmx384m", \
+    "-XX:MaxMetaspaceSize=128m", \
+    "-XX:+UseContainerSupport", \
+    "-XX:+ExitOnOutOfMemoryError", \
+    "-Djava.security.egd=file:/dev/./urandom", \
+    "-jar", "app.jar"]
