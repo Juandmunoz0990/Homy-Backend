@@ -1,24 +1,27 @@
 server:
-port: 8080
+  port: 8080
+
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/homy?useSSL=false&serverTimezone=America/Bogota&allowPublicKeyRetrieval=true
-    username: homy_user
-    password: 1234
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5432}/${PGDATABASE:homy}?serverTimezone=UTC
+    username: ${PGUSER:postgres}
+    password: ${PGPASSWORD:password}
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     defer-datasource-initialization: true
     hibernate:
-      ddl-auto: update   # otras opciones: none, validate, create, create-drop
-    show-sql: true       # muestra las consultas en consola
+      ddl-auto: update
+    show-sql: true
     properties:
       hibernate:
-        format_sql: true # formatea el SQL en consola
-    database-platform: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
 app:
   jwt:
-    secret: password123
+    secret: ${JWT_SECRET:password123}
     expiration-seconds: 86400
 
   pageable:
@@ -28,15 +31,12 @@ app:
   email:
     host: smtp.gmail.com
     port: 587
-    username: emailsendergordito@gmail.com # Gordito123@
-    password: ypcb qbzo bkhi uxyt
+    username: ${EMAIL_USERNAME:emailsendergordito@gmail.com}
+    password: ${EMAIL_PASSWORD:ypcb qbzo bkhi uxyt}
 
 springdoc:
   swagger-ui:
-    # Swagger UI generado automáticamente con tus controllers
     path: /swagger-ui.html
-    
-    # Opción: cargar también tu archivo openapi.yaml
     urls:
       - name: API Generada
         url: /v3/api-docs
