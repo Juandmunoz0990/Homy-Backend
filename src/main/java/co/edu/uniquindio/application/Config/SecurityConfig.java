@@ -80,7 +80,7 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of("*"));
+        configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("Content-Type", "Authorization"));
         configuration.setAllowCredentials(false);
@@ -88,6 +88,7 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
+        System.out.println("Allowed origins loaded: " + configuration.getAllowedOrigins());
         return source;
     }
 
