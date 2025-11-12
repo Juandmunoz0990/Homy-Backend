@@ -53,8 +53,11 @@ dependencies {
     // Runtime DB para pruebas
     runtimeOnly 'com.h2database:h2'
 
-    // Driver MySQL
-    implementation 'com.mysql:mysql-connector-j:8.4.0'
+    // Driver PostgreSQL para Railway
+    runtimeOnly 'org.postgresql:postgresql:42.7.3'
+    
+    // Driver MySQL (comentado para Railway, descomentar para desarrollo local)
+    // implementation 'com.mysql:mysql-connector-j:8.4.0'
 
     // Lombok (compilación y procesador de anotaciones)
     compileOnly 'org.projectlombok:lombok:1.18.30'
@@ -66,9 +69,10 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
 }
 
-tasks.named('test') {
-    useJUnitPlatform()
-}
+// Comentado para Railway - descomentar si quieres ejecutar tests localmente
+// tasks.named('test') {
+//     useJUnitPlatform()
+// }
 
 tasks.withType(JavaCompile) {
     options.annotationProcessorPath = configurations.annotationProcessor
