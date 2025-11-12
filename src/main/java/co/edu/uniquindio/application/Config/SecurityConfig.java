@@ -81,7 +81,8 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
             "http://localhost:4200",
             "http://localhost:3000",
             "https://homy-front.netlify.app",
-            "https://6914fcf5b8175000082598f4--homy-front.netlify.app"
+            "https://6914fcf5b8175000082598f4--homy-front.netlify.app",
+            "https://homy-frontend.vercel.app"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-CSRF-Token"));
