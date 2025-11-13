@@ -1,6 +1,7 @@
 package co.edu.uniquindio.application.Controllers;
 
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.User;
@@ -31,8 +32,12 @@ public class CommentController {
 
     @PreAuthorize("hasAuthority('GUEST')")
     @PostMapping("/create")
-    public ResponseEntity<EntityCreatedResponse> create(@RequestBody CommentRequest request, @AuthenticationPrincipal User user) {
+    public ResponseEntity<EntityCreatedResponse> create(
+        @PathVariable Long housingId,
+        @Valid @RequestBody CommentRequest request,
+        @AuthenticationPrincipal User user) {
         Long guestId = user.getUsername() != null ? Long.parseLong(user.getUsername()) : null;
+        request.setHousingId(housingId);
         EntityCreatedResponse created = service.create(guestId, request);
         return ResponseEntity.status(201).body(created);
     }

@@ -21,7 +21,11 @@ public record RegisterRequest(
     String email,
 
     @NotBlank(message = "La contraseña es obligatoria")
-    @Size(min = 6, message = "La contraseña debe tener al menos 6 caracteres")
+    @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
+    @Pattern(
+        regexp = "^(?=.*[A-Z])(?=.*\\d).{8,}$",
+        message = "La contraseña debe tener al menos 8 caracteres, incluir una mayúscula y un número"
+    )
     String password,
 
     @NotBlank(message = "El número de teléfono es obligatorio")

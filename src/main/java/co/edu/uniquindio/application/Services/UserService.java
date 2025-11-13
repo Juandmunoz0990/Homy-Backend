@@ -21,4 +21,6 @@ public interface UserService {
     String generateResetCode(String email);
 
     boolean validateResetCode(String email, String code);
+
+    void changePassword(Long userId, String currentPassword, String newPassword);
 }

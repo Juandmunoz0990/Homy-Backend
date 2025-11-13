@@ -2,6 +2,7 @@ package co.edu.uniquindio.application.Services.impl;
 
 import java.time.LocalDateTime;
 import java.util.Random;
+import java.util.regex.Pattern;
 
 import org.hibernate.ObjectNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -32,11 +33,14 @@ public class UserServiceImpl implements UserService {
     private final HostDetailsRepository hostInfoRepository;
     private final PasswordResetTokenRepository tokenRepository;
 
+    private static final Pattern PASSWORD_PATTERN = Pattern.compile("^(?=.*[A-Z])(?=.*\\d).{8,}$");
+
     @Override
     public User register(RegisterRequest u) {
         boolean exists = repo.findByEmail(u.email()).isPresent();
         if(exists) throw new IllegalArgumentException("Email already in use");
 
+        validatePasswordStrength(u.password());
         String pasEncode = passwordEncoder.encode(u.password());
         User user = userMapper.toUser(u);
         user.setPassword(pasEncode);
@@ -111,5 +115,26 @@ public class UserServiceImpl implements UserService {
         return tokenRepository.findByEmailAndCode(email, code)
                 .filter(token -> token.getExpiration().isAfter(LocalDateTime.now()))
                 .isPresent();
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(Long userId, String currentPassword, String newPassword) {
+        User user = repo.findById(userId)
+                .orElseThrow(() -> new ObjectNotFoundException("User with id: " + userId + " not found" , User.class));
+
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new IllegalArgumentException("La contraseña actual no es correcta");
+        }
+
+        validatePasswordStrength(newPassword);
+        user.setPassword(passwordEncoder.encode(newPassword));
+        repo.save(user);
+    }
+
+    private void validatePasswordStrength(String password) {
+        if (!PASSWORD_PATTERN.matcher(password).matches()) {
+            throw new IllegalArgumentException("La contraseña debe tener al menos 8 caracteres, incluir una mayúscula y un número");
+        }
     }
 }
