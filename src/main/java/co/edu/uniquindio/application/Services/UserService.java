@@ -1,6 +1,7 @@
 package co.edu.uniquindio.application.Services;
 
 
+import co.edu.uniquindio.application.Dtos.User.ChangePasswordRequest;
 import co.edu.uniquindio.application.Dtos.User.HostDetailsUpdateDTO;
 import co.edu.uniquindio.application.Dtos.User.UserResponseDTO;
 import co.edu.uniquindio.application.Dtos.User.UserUpdateDTO;
@@ -21,4 +22,6 @@ public interface UserService {
     String generateResetCode(String email);
 
     boolean validateResetCode(String email, String code);
+
+    void changePassword(Long userId, ChangePasswordRequest request);
 }

@@ -10,5 +10,6 @@ import co.edu.uniquindio.application.Models.User;
 public interface UserMapper {
     
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "profileImage", ignore = true)
     User toUser(RegisterRequest dto);
 }

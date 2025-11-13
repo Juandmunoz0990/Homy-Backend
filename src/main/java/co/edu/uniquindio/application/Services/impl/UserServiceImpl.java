@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import co.edu.uniquindio.application.Dtos.User.ChangePasswordRequest;
 import co.edu.uniquindio.application.Dtos.User.HostDetailsUpdateDTO;
 import co.edu.uniquindio.application.Dtos.User.UserResponseDTO;
 import co.edu.uniquindio.application.Dtos.User.UserUpdateDTO;
@@ -111,5 +112,23 @@ public class UserServiceImpl implements UserService {
         return tokenRepository.findByEmailAndCode(email, code)
                 .filter(token -> token.getExpiration().isAfter(LocalDateTime.now()))
                 .isPresent();
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(Long userId, ChangePasswordRequest request) {
+        User user = repo.findById(userId)
+                .orElseThrow(() -> new ObjectNotFoundException("User with id: " + userId + " not found", User.class));
+
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("La contraseña actual no es correcta");
+        }
+
+        if (passwordEncoder.matches(request.newPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("La nueva contraseña debe ser diferente a la actual");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        repo.save(user);
     }
 }

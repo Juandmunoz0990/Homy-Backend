@@ -27,13 +27,13 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@RequestBody RegisterRequest req) {
+    public ResponseEntity<User> register(@RequestBody @jakarta.validation.Valid RegisterRequest req) {
         var saved = userService.register(req);
         return ResponseEntity.status(201).body(saved);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest req) {
+    public ResponseEntity<?> login(@RequestBody @jakarta.validation.Valid LoginRequest req) {
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(req.email(), req.password())
         );

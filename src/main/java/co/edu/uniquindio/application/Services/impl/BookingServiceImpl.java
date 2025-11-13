@@ -75,6 +75,15 @@ public class BookingServiceImpl implements BookingService {
                 "\nNúmero de huéspedes: " + b.guestsNumber() + "\nPrecio total: " + b.totalPrice(),
                 guest.getEmail()));
 
+            User host = userService.findById(housing.getHostId());
+            emailService.sendMail(new EmailDTO(
+                "Nueva reserva",
+                "Has recibido una nueva reserva para " + housing.getTitle() +
+                ".\nHuésped: " + guest.getName() +
+                "\nCheck-in: " + b.checkIn() + "\nCheck-out: " + b.checkOut() +
+                "\nNúmero de huéspedes: " + b.guestsNumber(),
+                host.getEmail()));
+
         } catch (Exception e) {
             throw new RuntimeException("Failed to send email", e);
         }
@@ -106,11 +115,18 @@ public class BookingServiceImpl implements BookingService {
         //Enviar correo
         try {
             emailService.sendMail(new EmailDTO(
-                "Reserva creada",
-                "Su reserva ha sido creada exitosamente." + "\nDetalles:\nAlojamiento: " + booking.getHousing().getTitle() +
+                "Reserva cancelada",
+                "Tu reserva ha sido cancelada exitosamente." + "\nDetalles:\nAlojamiento: " + booking.getHousing().getTitle() +
                 "\nCheck-in: " + booking.getCheckIn() + "\nCheck-out: " + booking.getCheckOut() +
                 "\nNúmero de huéspedes: " + booking.getGuestsNumber() + "\nPrecio total: " + booking.getTotalPrice(),
                 guest.getEmail()));
+
+            User host = userService.findById(booking.getHousing().getHostId());
+            emailService.sendMail(new EmailDTO(
+                "Reserva cancelada",
+                "El huésped " + guest.getName() + " canceló la reserva para " + booking.getHousing().getTitle() +
+                ".\nCheck-in previsto: " + booking.getCheckIn(),
+                host.getEmail()));
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to send email", e);
@@ -128,7 +144,7 @@ public class BookingServiceImpl implements BookingService {
         if (user.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals("HOST"))) {
             //Lógica para que el host vea las reservas de solo sus alojamientos
             if (f.housingId() != null) {
-                if (!housingRepository.existsByIdAndHostId(f.housingId(), userId)) {
+                if (!housingRepository.existsByIdAndHostIdAndStateNot(f.housingId(), userId, Housing.STATE_DELETED)) {
                     throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso para ver las reservas de este alojamiento.");
                 }
             }

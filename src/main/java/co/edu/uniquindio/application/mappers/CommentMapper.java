@@ -19,5 +19,10 @@ public interface CommentMapper {
     @Mapping(target = "housing", ignore = true)
     Comment toComment (CommentRequest request);
 
+    @Mapping(target = "guestName", ignore = true)
+    @Mapping(target = "housingTitle", ignore = true)
+    @Mapping(target = "housingId", source = "housing.id")
+    CommentResponse toResponse(Comment comment);
+
     List<CommentResponse> toList (List<Comment> comments);
 }
