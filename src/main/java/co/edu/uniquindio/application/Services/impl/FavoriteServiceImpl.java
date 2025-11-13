@@ -2,7 +2,6 @@ package co.edu.uniquindio.application.Services.impl;
 
 import org.hibernate.ObjectNotFoundException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +17,6 @@ import co.edu.uniquindio.application.Services.UserService;
 import co.edu.uniquindio.application.mappers.HousingMapper;
 import lombok.RequiredArgsConstructor;
 
-import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -71,11 +69,6 @@ public class FavoriteServiceImpl implements FavoriteService {
         PageRequest pageable = PageRequest.of(page, size);
         Page<Favorite> favorites = favoriteRepository.findActiveFavoritesByGuestId(guestId, pageable);
 
-        List<SummaryHousingResponse> content = favorites.stream()
-                .map(Favorite::getHousing)
-                .map(housingMapper::toSummaryHousingResponse)
-                .toList();
-
-        return new PageImpl<>(content, pageable, favorites.getTotalElements());
+        return favorites.map(favorite -> housingMapper.toSummaryHousingResponse(favorite.getHousing()));
     }
 }

@@ -85,48 +85,64 @@ public class HousingServiceImpl implements HousingService {
         return new EntityChangedResponse("Housing updated succesfully", Instant.now());
     }
 
-     @Override
-     @Transactional(readOnly = true)
-     public Page<SummaryHousingResponse> getHousingsByFilters(String city, LocalDate checkIn, LocalDate checkOut,
-                                                              Double minPrice, Double maxPrice, Integer totalGuests,
-                                                              List<ServicesEnum> services, Integer indexPage) {
+    @Override
+    @Transactional(readOnly = true)
+    public Page<SummaryHousingResponse> getHousingsByFilters(String city, LocalDate checkIn, LocalDate checkOut,
+                                                             Double minPrice, Double maxPrice, Integer totalGuests,
+                                                             List<ServicesEnum> services, Integer indexPage) {
 
-         LocalDate dateIn = checkIn;
-         LocalDate dateOut = checkOut;
-         Double min = (minPrice != null && minPrice >= 0) ? minPrice : null;
-         Double max = (maxPrice != null && maxPrice >= 0) ? maxPrice : null;
-         Integer index = (indexPage != null && indexPage >= 0) ? indexPage : 0;
-         Integer guests = (totalGuests != null && totalGuests > 0) ? totalGuests : null;
-        List<ServicesEnum> serviceFilters = services != null ? new ArrayList<>(services) : new ArrayList<>();
+        LocalDate dateIn = checkIn;
+        LocalDate dateOut = checkOut;
 
-         Pageable pageable = PageRequest.of(index, PAGE_SIZE);
+        if (dateIn != null && dateOut != null && dateIn.isAfter(dateOut)) {
+            throw new IllegalArgumentException("La fecha de entrada debe ser anterior a la de salida");
+        }
 
-         Page<Housing> housings;
-         if (serviceFilters.isEmpty()) {
-             housings = housingRepository.findHousingsByFilters(
-                     city,
-                     dateIn,
-                     dateOut,
-                     min,
-                     max,
-                     guests,
-                     pageable
-             );
-         } else {
-             housings = housingRepository.findHousingsByFilters(
-                     city,
-                     dateIn,
-                     dateOut,
-                     min,
-                     max,
-                     guests,
-                     serviceFilters,
-                     serviceFilters.size(),
-                     pageable
-             );
-         }
+        Double min = (minPrice != null && minPrice >= 0) ? minPrice : null;
+        Double max = (maxPrice != null && maxPrice >= 0) ? maxPrice : null;
 
-         return housings.map(housingMapper::toSummaryHousingResponse);
+        if (min != null && max != null && min > max) {
+            throw new IllegalArgumentException("El precio mínimo no puede ser mayor al máximo");
+        }
+
+        Integer index = (indexPage != null && indexPage >= 0) ? indexPage : 0;
+        Integer guests = (totalGuests != null && totalGuests > 0) ? totalGuests : null;
+
+        List<ServicesEnum> serviceFilters = services == null
+                ? List.of()
+                : services.stream()
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .toList();
+
+        Pageable pageable = PageRequest.of(index, PAGE_SIZE);
+
+        Page<Housing> housings;
+        if (serviceFilters.isEmpty()) {
+            housings = housingRepository.findHousingsByFilters(
+                    city,
+                    dateIn,
+                    dateOut,
+                    min,
+                    max,
+                    guests,
+                    pageable
+            );
+        } else {
+            housings = housingRepository.findHousingsByFilters(
+                    city,
+                    dateIn,
+                    dateOut,
+                    min,
+                    max,
+                    guests,
+                    serviceFilters,
+                    serviceFilters.size(),
+                    pageable
+            );
+        }
+
+        return housings.map(housingMapper::toSummaryHousingResponse);
     }
 
     @Override

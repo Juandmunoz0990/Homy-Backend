@@ -70,7 +70,7 @@ public class UserServiceTest {
         RegisterRequest request = new RegisterRequest(
             "Nuevo Usuario",
             "nuevo@gmail.com",
-            "password123",
+            "Password123",
             "1234567890",
             new Date(),
             null
@@ -80,7 +80,7 @@ public class UserServiceTest {
             User user = userService.register(request);
             assertNotNull(user.getId());
             assertEquals("nuevo@gmail.com", user.getEmail());
-            assertTrue(passwordEncoder.matches("password123", user.getPassword()));
+            assertTrue(passwordEncoder.matches("Password123", user.getPassword()));
         });
     }
 
@@ -93,7 +93,7 @@ public class UserServiceTest {
         RegisterRequest request = new RegisterRequest(
             "Carlos Gómez",
             "carlos@gmail.com",  // Email existente
-            "pass123",
+            "Pass1234",
             "3001234567",
             new Date(),
             null

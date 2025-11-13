@@ -1,9 +1,9 @@
 INSERT INTO users (id, name, email, password, phone_number, role, birth_date) VALUES
-(1, 'Carlos Gómez', 'carlos@gmail.com', 'pass123', '3001234567', 'HOST', '1990-05-14'),
-(2, 'María López', 'maria@gmail.com', 'pass456', '3109876543', 'GUEST', '1995-07-20'),
-(3, 'Andrés Torres', 'andres@gmail.com', 'pass789', '3015558899', 'ADMIN', '1988-03-02'),
-(4, 'Laura Martínez', 'laura@gmail.com', 'pass111', '3207774444', 'HOST', '1993-09-18'),
-(5, 'Julián Pérez', 'julian@gmail.com', 'pass222', '3156667777', 'GUEST', '1998-12-30');
+(1, 'Carlos Gómez', 'carlos@gmail.com', 'Pass1234', '3001234567', 'HOST', '1990-05-14'),
+(2, 'María López', 'maria@gmail.com', 'Pass4567', '3109876543', 'GUEST', '1995-07-20'),
+(3, 'Andrés Torres', 'andres@gmail.com', 'Pass7890', '3015558899', 'ADMIN', '1988-03-02'),
+(4, 'Laura Martínez', 'laura@gmail.com', 'Pass1112', '3207774444', 'HOST', '1993-09-18'),
+(5, 'Julián Pérez', 'julian@gmail.com', 'Pass2223', '3156667777', 'GUEST', '1998-12-30');
 
 INSERT INTO housings (id, title, description, city, address, latitude, length, night_price, max_capacity, state, average_rating, host_id) VALUES
 (1, 'Casa Colonial en Cartagena', 'Hermosa casa cerca del mar con piscina y WiFi.', 'Cartagena', 'Calle 10 #5-30', 10.4236, -75.5253, 250000, 6, 'active', 4.7, 1),
