@@ -10,11 +10,14 @@ import org.springframework.data.domain.PageRequest;
 import co.edu.uniquindio.application.Dtos.Generic.EntityChangedResponse;
 import co.edu.uniquindio.application.Dtos.Generic.EntityCreatedResponse;
 import co.edu.uniquindio.application.Dtos.Housing.Requests.CreateOrEditHousingRequest;
+import co.edu.uniquindio.application.Dtos.Housing.Responses.HousingMetricsResponse;
 import co.edu.uniquindio.application.Dtos.Housing.Responses.HousingResponse;
 import co.edu.uniquindio.application.Dtos.Housing.Responses.SummaryHousingResponse;
 import co.edu.uniquindio.application.Exception.HousingUndeletedException;
 import co.edu.uniquindio.application.Models.Housing;
 import co.edu.uniquindio.application.Models.User;
+import co.edu.uniquindio.application.Models.enums.ServicesEnum;
+import co.edu.uniquindio.application.Repositories.FavoriteRepository;
 import co.edu.uniquindio.application.Repositories.HousingRepository;
 import co.edu.uniquindio.application.Services.BookingService;
 import co.edu.uniquindio.application.Services.HousingService;
@@ -24,6 +27,10 @@ import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -34,14 +41,15 @@ public class HousingServiceImpl implements HousingService {
     private final HousingMapper housingMapper;
     private final BookingService bookingService;
     private final UserService userService;
+    private final FavoriteRepository favoriteRepository;
 
-    private static final LocalDate CHECK_IN_DEFAULT = LocalDate.now();
-    private static final LocalDate CHECK_OUT_DEFAULT = LocalDate.now().plusDays(1);
+    private static final int PAGE_SIZE = 10;
 
     @Override
     public EntityCreatedResponse create(Long hostId, CreateOrEditHousingRequest request) {
         Housing housing = housingMapper.toHousing(request);
         housing.setHostId(hostId);
+        updatePrincipalImage(housing, request.imagesUrls());
         housingRepository.save(housing);
         return new EntityCreatedResponse("Housing created successfully", Instant.now());
     }
@@ -55,7 +63,7 @@ public class HousingServiceImpl implements HousingService {
         if (bookingService.existsFutureBookingsForHousing(housingId)) {
             throw new HousingUndeletedException("Housing with id: " + housingId + "and hostId: " + hostId + " has pending bookings");
         }
-        housingRepository.softDeleteByIdAndHostId(housingId, hostId);;
+        housingRepository.softDeleteByIdAndHostId(housingId, hostId);
         return new EntityChangedResponse("Housing deleted successfully", Instant.now());
     }
 
@@ -64,28 +72,77 @@ public class HousingServiceImpl implements HousingService {
         if (!existsHousing(housingId, hostId)) {
             throw new ObjectNotFoundException("Housing with id: " + housingId + " and hostId: " + hostId + " not found", Housing.class);
         }
-        Housing housing = housingMapper.toHousing(request);
-        housing.setId(housingId);
+        Housing housing = housingRepository.findById(housingId)
+            .orElseThrow(() -> new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class));
+
+        if (Objects.equals(housing.getState(), Housing.STATE_DELETED)) {
+            throw new IllegalStateException("Cannot edit a deleted housing");
+        }
+
+        housingMapper.updateHousingFromRequest(request, housing);
+        updatePrincipalImage(housing, request.imagesUrls());
         housingRepository.save(housing);
         return new EntityChangedResponse("Housing updated succesfully", Instant.now());
     }
 
-     @Override
-     @Transactional(readOnly = true)
-     public Page<SummaryHousingResponse> getHousingsByFilters(String city, LocalDate checkIn, LocalDate checkOut,
-                                                              Double minPrice, Double maxPrice, Integer indexPage) {
+    @Override
+    @Transactional(readOnly = true)
+    public Page<SummaryHousingResponse> getHousingsByFilters(String city, LocalDate checkIn, LocalDate checkOut,
+                                                             Double minPrice, Double maxPrice, Integer totalGuests,
+                                                             List<ServicesEnum> services, Integer indexPage) {
 
-         LocalDate dateIn = (checkIn != null) ? checkIn : CHECK_IN_DEFAULT;
-         LocalDate dateOut = (checkOut != null) ? checkOut : CHECK_OUT_DEFAULT;
-         Double min = (minPrice != null && minPrice >= 0) ? minPrice : 0;
-         Double max = (maxPrice != null && maxPrice >= 0 && maxPrice != minPrice) ? maxPrice : 50; 
-         Integer index = (indexPage != null && indexPage >= 0) ? indexPage : 0;
+        LocalDate dateIn = checkIn;
+        LocalDate dateOut = checkOut;
 
-         Pageable pageable = PageRequest.of(index, 20);
+        if (dateIn != null && dateOut != null && dateIn.isAfter(dateOut)) {
+            throw new IllegalArgumentException("La fecha de entrada debe ser anterior a la de salida");
+        }
 
-         Page<Housing> housings = housingRepository.findHousingsByFilters(city, dateIn, dateOut, min, max, pageable);
+        Double min = (minPrice != null && minPrice >= 0) ? minPrice : null;
+        Double max = (maxPrice != null && maxPrice >= 0) ? maxPrice : null;
 
-         return housings.map(housingMapper::toSummaryHousingResponse);
+        if (min != null && max != null && min > max) {
+            throw new IllegalArgumentException("El precio mínimo no puede ser mayor al máximo");
+        }
+
+        Integer index = (indexPage != null && indexPage >= 0) ? indexPage : 0;
+        Integer guests = (totalGuests != null && totalGuests > 0) ? totalGuests : null;
+
+        List<ServicesEnum> serviceFilters = services == null
+                ? List.of()
+                : services.stream()
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .toList();
+
+        Pageable pageable = PageRequest.of(index, PAGE_SIZE);
+
+        Page<Housing> housings;
+        if (serviceFilters.isEmpty()) {
+            housings = housingRepository.findHousingsByFilters(
+                    city,
+                    dateIn,
+                    dateOut,
+                    min,
+                    max,
+                    guests,
+                    pageable
+            );
+        } else {
+            housings = housingRepository.findHousingsByFilters(
+                    city,
+                    dateIn,
+                    dateOut,
+                    min,
+                    max,
+                    guests,
+                    serviceFilters,
+                    serviceFilters.size(),
+                    pageable
+            );
+        }
+
+        return housings.map(housingMapper::toSummaryHousingResponse);
     }
 
     @Override
@@ -106,10 +163,14 @@ public class HousingServiceImpl implements HousingService {
 
     @Override
 @Transactional(readOnly = true)
-public HousingResponse getHousingDetail(Long housingId) {
+    public HousingResponse getHousingDetail(Long housingId) {
 
     Housing housing = housingRepository.findById(housingId)
             .orElseThrow(() -> new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class));
+
+    if (Housing.STATE_DELETED.equals(housing.getState())) {
+        throw new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class);
+    }
 
     HousingResponse response = housingMapper.toHousingResponse(housing);
 
@@ -136,7 +197,53 @@ public HousingResponse getHousingDetail(Long housingId) {
             throw new IllegalArgumentException("The hostId must be positive");
         }
 
-        return housingRepository.existsByIdAndHostId(housingId, hostId);
+        return housingRepository.existsByIdAndHostIdAndStateNot(housingId, hostId, Housing.STATE_DELETED);
+    }
+
+    @Override
+    public HousingMetricsResponse getHousingMetrics(Long hostId, Long housingId, LocalDate startDate, LocalDate endDate) {
+        Housing housing = housingRepository.findById(housingId)
+            .orElseThrow(() -> new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class));
+
+        if (!Objects.equals(housing.getHostId(), hostId)) {
+            throw new IllegalArgumentException("The housing does not belong to the authenticated host");
+        }
+
+        if (Housing.STATE_DELETED.equals(housing.getState())) {
+            throw new IllegalStateException("Housing is deleted");
+        }
+
+        if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("La fecha inicial no puede ser posterior a la final");
+        }
+
+        Long bookingsCount = housingRepository.countBookingsForHousing(housingId, startDate, endDate);
+        Double ratingAverage = housingRepository.calculateAverageRating(housingId, startDate, endDate);
+        Long favoritesCount = favoriteRepository.countByHousingId(housingId);
+
+        return new HousingMetricsResponse(
+            housingId,
+            bookingsCount,
+            ratingAverage != null ? ratingAverage : 0.0,
+            favoritesCount
+        );
+    }
+
+    private void updatePrincipalImage(Housing housing, List<String> imagesUrls) {
+        if (imagesUrls == null || imagesUrls.isEmpty()) {
+            housing.setPrincipalImage(null);
+            housing.setImages(new ArrayList<>());
+            return;
+        }
+
+        List<String> sanitized = imagesUrls.stream()
+            .filter(Objects::nonNull)
+            .map(String::trim)
+            .filter(url -> !url.isEmpty())
+            .collect(Collectors.toList());
+
+        housing.setImages(new ArrayList<>(sanitized));
+        housing.setPrincipalImage(sanitized.isEmpty() ? null : sanitized.get(0));
     }
 }
 

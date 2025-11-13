@@ -1,5 +1,6 @@
 package co.edu.uniquindio.application.Models;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import co.edu.uniquindio.application.Models.enums.ServicesEnum;
@@ -30,16 +31,19 @@ public class Housing {
     private Double nightPrice;
     private Integer maxCapacity;
     @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "housing_services", joinColumns = @JoinColumn(name = "housing_id"))
     @Enumerated(EnumType.STRING)
-    private List<ServicesEnum> services;
+    private List<ServicesEnum> services = new ArrayList<>();
     private String principalImage;
-    @Column(columnDefinition = "TEXT")
-    private List<String> images;
+    @ElementCollection
+    @CollectionTable(name = "housing_images", joinColumns = @JoinColumn(name = "housing_id"))
+    @Column(name = "image_url", columnDefinition = "TEXT")
+    private List<String> images = new ArrayList<>();
     private String state = STATE_ACTIVE;
-    private Double averageRating;
+    private Double averageRating = 0.0;
     @OneToMany(mappedBy = "housing", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Booking> bookingsList;
-    @OneToMany(mappedBy = "content", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "housing", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> commentsList;
     private Long hostId;
 }
