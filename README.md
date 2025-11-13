@@ -1,4 +1,4 @@
-LINK DESPLIEGUE : https://homy-app-545ae.web.app
+LINK DESPLIEGUE : https://homy-frontend.vercel.app
 
 # 🏡 Proyecto de Alojamientos
 
