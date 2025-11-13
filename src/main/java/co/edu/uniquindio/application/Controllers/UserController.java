@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import co.edu.uniquindio.application.Dtos.User.HostDetailsUpdateDTO;
+import co.edu.uniquindio.application.Dtos.User.PasswordChangeRequest;
 import co.edu.uniquindio.application.Dtos.User.PasswordResetRequest;
 import co.edu.uniquindio.application.Dtos.User.UserResponseDTO;
 import co.edu.uniquindio.application.Dtos.User.UserUpdateDTO;
@@ -54,6 +55,24 @@ public class UserController {
     public ResponseEntity<UserResponseDTO> updateHostInfo(@AuthenticationPrincipal org.springframework.security.core.userdetails.User user, @Valid @RequestBody HostDetailsUpdateDTO dto) {
         Long id = user.getUsername() != null ? Long.parseLong(user.getUsername()) : null;
         return ResponseEntity.ok(userService.updateHostInfo(id, dto));
+    }
+
+    /**
+     * Change user password providing current password
+     */
+    @PutMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+            @AuthenticationPrincipal org.springframework.security.core.userdetails.User user,
+            @Valid @RequestBody PasswordChangeRequest request
+    ) {
+        Long id = user.getUsername() != null ? Long.parseLong(user.getUsername()) : null;
+
+        try {
+            userService.changePassword(id, request.currentPassword(), request.newPassword());
+            return ResponseEntity.ok(Map.of("message", "Contraseña actualizada con éxito"));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", ex.getMessage()));
+        }
     }
 
     /**

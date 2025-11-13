@@ -8,6 +8,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
+
 import co.edu.uniquindio.application.Dtos.auth.LoginRequest;
 import co.edu.uniquindio.application.Dtos.auth.RegisterRequest;
 import co.edu.uniquindio.application.Models.User;
@@ -27,7 +29,7 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@RequestBody RegisterRequest req) {
+    public ResponseEntity<User> register(@Valid @RequestBody RegisterRequest req) {
         var saved = userService.register(req);
         return ResponseEntity.status(201).body(saved);
     }
