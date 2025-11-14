@@ -52,10 +52,13 @@ public class HousingController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<SummaryHousingResponse>> getHousings(@RequestParam String city,
+    public ResponseEntity<Page<SummaryHousingResponse>> getHousings(
+            @RequestParam(required = false) String city,
             @RequestParam LocalDate checkIn, @RequestParam LocalDate checkOut,
             @RequestParam Double minPrice, @RequestParam Double maxPrice, @RequestParam Integer indexPage) {
-        Page<SummaryHousingResponse> response = service.getHousingsByFilters(city, checkIn, checkOut, minPrice,
+        // Si city está vacío o es solo espacios, tratarlo como null
+        String cityParam = (city != null && !city.trim().isEmpty()) ? city.trim() : null;
+        Page<SummaryHousingResponse> response = service.getHousingsByFilters(cityParam, checkIn, checkOut, minPrice,
                 maxPrice, indexPage);
         return ResponseEntity.ok(response);
     }
