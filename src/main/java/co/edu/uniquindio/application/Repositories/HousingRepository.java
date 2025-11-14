@@ -51,4 +51,8 @@ Page<Housing> findHousingsByFilters(
   @Modifying
   @Query("UPDATE Housing h SET h.state = 'deleted' WHERE h.id = :housingId AND h.hostId = :hostId")
   void softDeleteByIdAndHostId(@Param("housingId") Long housingId, @Param("hostId") Long hostId);
+  
+  // Query específica para obtener housing sin cargar relaciones lazy
+  @Query("SELECT h FROM Housing h WHERE h.id = :housingId")
+  java.util.Optional<Housing> findByIdWithoutRelations(@Param("housingId") Long housingId);
 }

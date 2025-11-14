@@ -234,41 +234,67 @@ public class HousingServiceImpl implements HousingService {
             throw new IllegalArgumentException("Housing ID must be positive");
         }
 
-        Housing housing = housingRepository.findById(housingId)
-                .orElseThrow(() -> new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class));
-
-        HousingResponse response = housingMapper.toHousingResponse(housing);
-
-        // Asegurar que las listas no sean null para evitar problemas de serialización
-        if (response.getImages() == null) {
-            response.setImages(new ArrayList<>());
-        }
-        if (response.getServices() == null) {
-            response.setServices(new ArrayList<>());
-        }
-        // No incluir bookingsList y commentsList para evitar problemas de serialización
-        response.setBookingsList(null);
-        response.setCommentsList(null);
-
-        // Obtener el nombre del host de forma segura
         try {
-            if (housing.getHostId() != null) {
-                User user = userService.findById(housing.getHostId());
-                if (user != null && user.getName() != null) {
-                    response.setHostName(user.getName());
+            // Usar query específica para evitar cargar relaciones lazy automáticamente
+            Housing housing = housingRepository.findByIdWithoutRelations(housingId)
+                    .orElse(housingRepository.findById(housingId)
+                            .orElseThrow(() -> new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class)));
+
+            // Construir el DTO manualmente para evitar problemas con relaciones lazy
+            HousingResponse response = new HousingResponse();
+            
+            // Copiar campos básicos directamente sin acceder a relaciones
+            response.setTitle(housing.getTitle());
+            response.setDescription(housing.getDescription());
+            response.setCity(housing.getCity());
+            response.setAddress(housing.getAddress());
+            response.setLatitude(housing.getLatitude());
+            response.setLength(housing.getLength());
+            response.setNightPrice(housing.getNightPrice());
+            response.setMaxCapacity(housing.getMaxCapacity());
+            response.setAverageRating(housing.getAverageRating());
+            
+            // Copiar servicios (ya es EAGER, no debería causar problemas)
+            if (housing.getServices() != null) {
+                response.setServices(new ArrayList<>(housing.getServices()));
+            } else {
+                response.setServices(new ArrayList<>());
+            }
+            
+            // Copiar imágenes (campo simple, no relación)
+            if (housing.getImages() != null) {
+                response.setImages(new ArrayList<>(housing.getImages()));
+            } else {
+                response.setImages(new ArrayList<>());
+            }
+            
+            // NO incluir bookingsList y commentsList para evitar problemas de serialización
+            response.setBookingsList(null);
+            response.setCommentsList(null);
+
+            // Obtener el nombre del host de forma segura
+            try {
+                if (housing.getHostId() != null) {
+                    User user = userService.findById(housing.getHostId());
+                    if (user != null && user.getName() != null) {
+                        response.setHostName(user.getName());
+                    } else {
+                        response.setHostName("Host");
+                    }
                 } else {
                     response.setHostName("Host");
                 }
-            } else {
+            } catch (Exception e) {
+                // Si hay error al obtener el usuario, usar un valor por defecto
+                log.warn("Error getting host name for housing {}: {}", housingId, e.getMessage());
                 response.setHostName("Host");
             }
-        } catch (Exception e) {
-            // Si hay error al obtener el usuario, usar un valor por defecto
-            log.warn("Error getting host name for housing {}: {}", housingId, e.getMessage());
-            response.setHostName("Host");
-        }
 
-        return response;
+            return response;
+        } catch (Exception e) {
+            log.error("Error fetching housing detail for id {}: {}", housingId, e.getMessage(), e);
+            throw new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class);
+        }
     }
 
     @Override
