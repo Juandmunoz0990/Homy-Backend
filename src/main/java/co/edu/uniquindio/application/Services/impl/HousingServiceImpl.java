@@ -26,6 +26,7 @@ import co.edu.uniquindio.application.Services.HousingService;
 import co.edu.uniquindio.application.Services.UserService;
 import co.edu.uniquindio.application.mappers.HousingMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -37,6 +38,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -139,19 +141,48 @@ public class HousingServiceImpl implements HousingService {
     }
 
     @Override
-@Transactional(readOnly = true)
-public HousingResponse getHousingDetail(Long housingId) {
+    @Transactional(readOnly = true)
+    public HousingResponse getHousingDetail(Long housingId) {
+        if (housingId == null || housingId <= 0) {
+            throw new IllegalArgumentException("Housing ID must be positive");
+        }
 
-    Housing housing = housingRepository.findById(housingId)
-            .orElseThrow(() -> new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class));
+        Housing housing = housingRepository.findById(housingId)
+                .orElseThrow(() -> new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class));
 
-    HousingResponse response = housingMapper.toHousingResponse(housing);
+        HousingResponse response = housingMapper.toHousingResponse(housing);
 
-    User user = userService.findById(housing.getHostId());
-    response.setHostName(user.getName());
+        // Asegurar que las listas no sean null para evitar problemas de serialización
+        if (response.getImages() == null) {
+            response.setImages(new ArrayList<>());
+        }
+        if (response.getServices() == null) {
+            response.setServices(new ArrayList<>());
+        }
+        // No incluir bookingsList y commentsList para evitar problemas de serialización
+        response.setBookingsList(null);
+        response.setCommentsList(null);
 
-    return response;
-}
+        // Obtener el nombre del host de forma segura
+        try {
+            if (housing.getHostId() != null) {
+                User user = userService.findById(housing.getHostId());
+                if (user != null && user.getName() != null) {
+                    response.setHostName(user.getName());
+                } else {
+                    response.setHostName("Host");
+                }
+            } else {
+                response.setHostName("Host");
+            }
+        } catch (Exception e) {
+            // Si hay error al obtener el usuario, usar un valor por defecto
+            log.warn("Error getting host name for housing {}: {}", housingId, e.getMessage());
+            response.setHostName("Host");
+        }
+
+        return response;
+    }
 
     @Override
      @Transactional(readOnly = true)
