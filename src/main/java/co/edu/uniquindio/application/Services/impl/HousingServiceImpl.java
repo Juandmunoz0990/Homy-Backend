@@ -100,6 +100,11 @@ public class HousingServiceImpl implements HousingService {
         // Obtener el housing existente para preservar campos que no deben cambiar
         Housing existingHousing = findById(housingId);
         
+        // Preservar valores críticos antes de actualizar
+        String preservedState = existingHousing.getState() != null ? existingHousing.getState() : Housing.STATE_ACTIVE;
+        Long preservedHostId = existingHousing.getHostId();
+        Double preservedAverageRating = existingHousing.getAverageRating();
+        
         // Actualizar solo los campos que vienen en el request
         existingHousing.setTitle(request.title());
         existingHousing.setDescription(request.description());
@@ -117,13 +122,15 @@ public class HousingServiceImpl implements HousingService {
             existingHousing.setPrincipalImage(request.imagesUrls().get(0));
         }
         
-        // Preservar campos importantes que NO deben cambiar:
-        // - existingHousing.getId() - ya está establecido
-        // - existingHousing.getHostId() - no debe cambiar
-        // - existingHousing.getState() - no debe cambiar (mantener "active" o "deleted")
-        // - existingHousing.getAverageRating() - se calcula automáticamente
-        // - existingHousing.getBookingsList() - relación, no se toca
-        // - existingHousing.getCommentsList() - relación, no se toca
+        // Restaurar campos críticos que NO deben cambiar
+        existingHousing.setState(preservedState);
+        existingHousing.setHostId(preservedHostId);
+        if (preservedAverageRating != null) {
+            existingHousing.setAverageRating(preservedAverageRating);
+        }
+        
+        // Asegurar que el ID no cambie
+        existingHousing.setId(housingId);
         
         housingRepository.save(existingHousing);
         return new EntityChangedResponse("Housing updated succesfully", Instant.now());
