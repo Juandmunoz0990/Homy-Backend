@@ -272,44 +272,29 @@ public class HousingServiceImpl implements HousingService {
 
         log.info("Fetching housing detail for ID: {}", housingId);
 
-        // Buscar la propiedad usando query nativa
-        java.util.Optional<Object[]> nativeResult = housingRepository.findByIdNative(housingId);
+        // Buscar la propiedad usando findByIdWithoutRelations para evitar problemas con ElementCollection
+        Housing housing = housingRepository.findByIdWithoutRelations(housingId)
+            .orElseThrow(() -> new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class));
         
-        if (!nativeResult.isPresent()) {
-            log.warn("Housing with id {} not found", housingId);
-            throw new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class);
-        }
-        
-        Object[] row = nativeResult.get();
-        
-        // Validar que el array tenga los elementos esperados (13 columnas)
-        if (row == null || row.length < 13) {
-            log.error("Invalid result from native query for housing {}: array length is {}, expected 13", housingId, row != null ? row.length : 0);
-            throw new ObjectNotFoundException("Housing with id: " + housingId + " not found (invalid data)", Housing.class);
-        }
-        
-        log.debug("Native query returned array with {} elements for housing {}", row.length, housingId);
-        
-        // Verificar estado (índice 10)
-        String state = row.length > 10 && row[10] != null ? (String) row[10] : null;
-        if (state != null && state.equals("deleted")) {
+        // Verificar estado
+        if (housing.getState() != null && housing.getState().equals("deleted")) {
             log.warn("Housing {} is deleted", housingId);
             throw new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class);
         }
         
-        // Construir respuesta con validación de índices
+        // Construir respuesta
         HousingResponse response = new HousingResponse();
-        response.setTitle(row.length > 1 ? (String) row[1] : "");
-        response.setDescription(row.length > 2 ? (String) row[2] : "");
-        response.setCity(row.length > 3 ? (String) row[3] : "");
-        response.setAddress(row.length > 4 ? (String) row[4] : "");
-        response.setLatitude(row.length > 5 && row[5] != null ? ((Number) row[5]).doubleValue() : null);
-        response.setLength(row.length > 6 && row[6] != null ? ((Number) row[6]).doubleValue() : null);
-        response.setNightPrice(row.length > 7 && row[7] != null ? ((Number) row[7]).doubleValue() : null);
-        response.setMaxCapacity(row.length > 8 && row[8] != null ? ((Number) row[8]).intValue() : null);
-        response.setAverageRating(row.length > 11 && row[11] != null ? ((Number) row[11]).doubleValue() : null);
+        response.setTitle(housing.getTitle() != null ? housing.getTitle() : "");
+        response.setDescription(housing.getDescription() != null ? housing.getDescription() : "");
+        response.setCity(housing.getCity() != null ? housing.getCity() : "");
+        response.setAddress(housing.getAddress() != null ? housing.getAddress() : "");
+        response.setLatitude(housing.getLatitude());
+        response.setLength(housing.getLength());
+        response.setNightPrice(housing.getNightPrice() != null ? housing.getNightPrice() : 0.0);
+        response.setMaxCapacity(housing.getMaxCapacity() != null ? housing.getMaxCapacity() : 0);
+        response.setAverageRating(housing.getAverageRating());
         
-        // Cargar servicios
+        // Cargar servicios usando query separada
         try {
             List<String> serviceStrings = housingRepository.findServicesByHousingId(housingId);
             List<co.edu.uniquindio.application.Models.enums.ServicesEnum> services = serviceStrings.stream()
@@ -324,37 +309,38 @@ public class HousingServiceImpl implements HousingService {
                 .collect(java.util.stream.Collectors.toList());
             response.setServices(services);
         } catch (Exception e) {
+            log.debug("Could not load services for housing {}: {}", housingId, e.getMessage());
             response.setServices(new ArrayList<>());
         }
         
-        // Cargar imágenes
+        // Cargar imágenes usando query separada
         try {
             List<String> images = housingRepository.findImagesByHousingId(housingId);
-            if (images.isEmpty() && row.length > 9) {
-                String principalImage = (String) row[9];
-                if (principalImage != null && !principalImage.trim().isEmpty()) {
-                    images = List.of(principalImage);
-                }
+            if (images.isEmpty() && housing.getPrincipalImage() != null && !housing.getPrincipalImage().trim().isEmpty()) {
+                images = List.of(housing.getPrincipalImage());
             }
             response.setImages(new ArrayList<>(images));
         } catch (Exception e) {
-            String principalImage = row.length > 9 ? (String) row[9] : null;
-            response.setImages(principalImage != null ? new ArrayList<>(List.of(principalImage)) : new ArrayList<>());
+            log.debug("Could not load images for housing {}: {}", housingId, e.getMessage());
+            String principalImage = housing.getPrincipalImage();
+            response.setImages(principalImage != null && !principalImage.trim().isEmpty() 
+                ? new ArrayList<>(List.of(principalImage)) 
+                : new ArrayList<>());
         }
         
         response.setBookingsList(null);
         response.setCommentsList(null);
         
         // Obtener nombre del host
-        Long hostId = row.length > 12 && row[12] != null ? ((Number) row[12]).longValue() : null;
         try {
-            if (hostId != null) {
-                User user = userService.findById(hostId);
+            if (housing.getHostId() != null) {
+                User user = userService.findById(housing.getHostId());
                 response.setHostName(user != null && user.getName() != null ? user.getName() : "Host");
             } else {
                 response.setHostName("Host");
             }
         } catch (Exception e) {
+            log.debug("Could not load host name for housing {}: {}", housingId, e.getMessage());
             response.setHostName("Host");
         }
         
