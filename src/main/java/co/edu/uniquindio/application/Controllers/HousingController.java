@@ -54,9 +54,20 @@ public class HousingController {
     @GetMapping
     public ResponseEntity<Page<SummaryHousingResponse>> getHousings(
             @RequestParam(required = false) String city,
-            @RequestParam LocalDate checkIn, @RequestParam LocalDate checkOut,
-            @RequestParam Double minPrice, @RequestParam Double maxPrice, @RequestParam Integer indexPage) {
-        // Si city está vacío o es solo espacios, tratarlo como null
+            @RequestParam(required = false) LocalDate checkIn, 
+            @RequestParam(required = false) LocalDate checkOut,
+            @RequestParam(required = false) Double minPrice, 
+            @RequestParam(required = false) Double maxPrice, 
+            @RequestParam(required = false, defaultValue = "0") Integer indexPage,
+            @RequestParam(required = false, defaultValue = "20") Integer size) {
+        
+        // Si no hay filtros, devolver todas las propiedades activas
+        if (city == null && checkIn == null && checkOut == null && minPrice == null && maxPrice == null) {
+            Page<SummaryHousingResponse> response = service.getAllActiveHousings(indexPage, size);
+            return ResponseEntity.ok(response);
+        }
+        
+        // Si hay filtros, usar la búsqueda con filtros
         String cityParam = (city != null && !city.trim().isEmpty()) ? city.trim() : null;
         Page<SummaryHousingResponse> response = service.getHousingsByFilters(cityParam, checkIn, checkOut, minPrice,
                 maxPrice, indexPage);

@@ -19,6 +19,7 @@ public interface HousingService {
     EntityChangedResponse delete(Long housingId, Long hostId);
     EntityChangedResponse edit(Long housingId, Long hostId, CreateOrEditHousingRequest request);
     Page<SummaryHousingResponse> getHousingsByFilters(String city, LocalDate checkIn, LocalDate checkOut, Double minPrice, Double maxPrice, Integer totalGuests);
+    Page<SummaryHousingResponse> getAllActiveHousings(Integer page, Integer size);
     Page<SummaryHousingResponse> getHousingsByHost(Long hostId, Integer page, Integer size);
     HousingResponse getHousingDetail(Long housingId);
     Housing findById(Long id);

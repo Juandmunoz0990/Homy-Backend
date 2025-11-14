@@ -48,16 +48,35 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public Booking save(BookingCreateDTO b, Long guestId) {
+        LocalDate today = LocalDate.now();
+        
+        // Validar que check-in no sea en el pasado
+        if (b.checkIn().isBefore(today)) {
+            throw new IllegalStateException("Check-in date cannot be in the past");
+        }
+        
+        // Validar que check-out no sea en el pasado
+        if (b.checkOut().isBefore(today)) {
+            throw new IllegalStateException("Check-out date must be in the future");
+        }
+        
+        // Validar que check-in sea antes de check-out
+        if (b.checkIn().isAfter(b.checkOut()) || b.checkIn().isEqual(b.checkOut())) {
+            throw new IllegalStateException("Check-in date must be before check-out date");
+        }
+
+        // Validar mínimo 1 noche
+        long daysBetween = ChronoUnit.DAYS.between(b.checkIn(), b.checkOut());
+        if (daysBetween < 1) {
+            throw new IllegalStateException("Booking must be at least one night");
+        }
+        
+        // Validar disponibilidad (no solapamiento con otras reservas confirmadas)
         boolean hasOverlap = repo.existsOverlappingBooking(
             b.housingId(), b.checkIn(), b.checkOut(), List.of(BookingStatus.CONFIRMED));
-        if (hasOverlap) throw new IllegalStateException("The housing is not available for the selected dates.");
-
-        if (b.checkIn().isAfter(b.checkOut())) throw new IllegalStateException("Check-in date must be before check-out date");
-
-        if (b.checkOut().isBefore(LocalDate.now())) throw new IllegalStateException("Check-out date must be in the future");
-
-        long daysBetween = ChronoUnit.DAYS.between(b.checkIn(), b.checkOut());
-        if (daysBetween < 1) throw new IllegalStateException("Booking must be at least one night");
+        if (hasOverlap) {
+            throw new IllegalStateException("The housing is not available for the selected dates. Please select different dates.");
+        }
 
         Long housingId = b.housingId();
         if (housingId == null) throw new IllegalArgumentException("Housing id is required");

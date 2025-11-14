@@ -146,6 +146,17 @@ public class HousingServiceImpl implements HousingService {
 
      @Override
      @Transactional(readOnly = true)
+     public Page<SummaryHousingResponse> getAllActiveHousings(Integer page, Integer size) {
+         Integer pageNum = (page != null && page >= 0) ? page : 0;
+         Integer pageSize = (size != null && size > 0) ? size : 20;
+         Pageable pageable = PageRequest.of(pageNum, pageSize);
+         
+         Page<Housing> housings = housingRepository.findAllActive(pageable);
+         return housings.map(housingMapper::toSummaryHousingResponse);
+     }
+
+     @Override
+     @Transactional(readOnly = true)
      public Page<SummaryHousingResponse> getHousingsByFilters(String city, LocalDate checkIn, LocalDate checkOut,
                                                               Double minPrice, Double maxPrice, Integer indexPage) {
 

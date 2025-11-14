@@ -20,6 +20,13 @@ public interface HousingRepository extends JpaRepository<Housing, Long> {
   @Query("""
     SELECT DISTINCT h
     FROM Housing h
+    WHERE (h.state IS NULL OR h.state = '' OR h.state = 'active')
+    """)
+  Page<Housing> findAllActive(Pageable pageable);
+  
+  @Query("""
+    SELECT DISTINCT h
+    FROM Housing h
     WHERE (:city IS NULL OR LOWER(h.city) = LOWER(:city))
       AND (:minPrice IS NULL OR h.nightPrice >= :minPrice)
       AND (:maxPrice IS NULL OR h.nightPrice <= :maxPrice)
