@@ -17,6 +17,7 @@ import co.edu.uniquindio.application.Dtos.Housing.Responses.SummaryHousingRespon
 import co.edu.uniquindio.application.Exception.HousingUndeletedException;
 import co.edu.uniquindio.application.Models.Housing;
 import co.edu.uniquindio.application.Models.User;
+import co.edu.uniquindio.application.Models.Comment;
 import co.edu.uniquindio.application.Repositories.BookingRepository;
 import co.edu.uniquindio.application.Repositories.CommentRepository;
 import co.edu.uniquindio.application.Repositories.HousingRepository;
@@ -184,16 +185,51 @@ public HousingResponse getHousingDetail(Long housingId) {
         
         // Contar reservas en el rango de fechas
         Long totalBookings = bookingRepository.countBookingsByHousingAndDateRange(housingId, dateFrom, dateTo);
+        if (totalBookings == null) {
+            totalBookings = 0L;
+        }
         
-        // Calcular promedio de calificaciones en el rango de fechas
-        java.time.LocalDateTime dateFromDateTime = dateFrom != null ? dateFrom.atStartOfDay() : null;
-        java.time.LocalDateTime dateToDateTime = dateTo != null ? dateTo.atTime(23, 59, 59) : null;
-        Double averageRating = commentRepository.calculateAverageRatingByHousingAndDateRange(
-            housingId, dateFromDateTime, dateToDateTime
-        );
+        // Calcular promedio de calificaciones
+        Double averageRating = null;
         
-        // Si no hay calificaciones, usar el promedio general del alojamiento
-        if (averageRating == null) {
+        // Si no hay filtros de fecha, usar el promedio del alojamiento directamente
+        if (dateFrom == null && dateTo == null) {
+            averageRating = housing.getAverageRating() != null ? housing.getAverageRating() : 0.0;
+        } else {
+            // Si hay filtros de fecha, calcular manualmente filtrando en memoria
+            try {
+                List<Comment> allComments = commentRepository.findAllByHousingId(housingId);
+                if (!allComments.isEmpty()) {
+                    java.time.LocalDate dateFromLocal = dateFrom;
+                    java.time.LocalDate dateToLocal = dateTo;
+                    
+                    List<Comment> filteredComments = allComments.stream()
+                        .filter(c -> {
+                            if (dateFromLocal != null && c.getCreatedAt().toLocalDate().isBefore(dateFromLocal)) {
+                                return false;
+                            }
+                            if (dateToLocal != null && c.getCreatedAt().toLocalDate().isAfter(dateToLocal)) {
+                                return false;
+                            }
+                            return true;
+                        })
+                        .collect(java.util.stream.Collectors.toList());
+                    
+                    if (!filteredComments.isEmpty()) {
+                        averageRating = filteredComments.stream()
+                            .mapToInt(Comment::getRate)
+                            .average()
+                            .orElse(0.0);
+                    }
+                }
+            } catch (Exception e) {
+                // Si hay error, usar el promedio del alojamiento
+                averageRating = null;
+            }
+        }
+        
+        // Si no hay calificaciones o hubo error, usar el promedio general del alojamiento
+        if (averageRating == null || averageRating == 0.0) {
             averageRating = housing.getAverageRating() != null ? housing.getAverageRating() : 0.0;
         }
         

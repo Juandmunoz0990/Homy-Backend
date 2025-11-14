@@ -34,4 +34,10 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
         @Param("dateFrom") java.time.LocalDateTime dateFrom,
         @Param("dateTo") java.time.LocalDateTime dateTo
     );
+    
+    /**
+     * Get all comments for a housing to calculate average manually if needed
+     */
+    @Query("SELECT c FROM Comment c WHERE c.housing.id = :housingId")
+    List<Comment> findAllByHousingId(@Param("housingId") Long housingId);
 }
