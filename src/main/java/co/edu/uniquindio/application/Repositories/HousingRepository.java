@@ -23,7 +23,7 @@ public interface HousingRepository extends JpaRepository<Housing, Long> {
     WHERE (:city IS NULL OR LOWER(h.city) = LOWER(:city))
       AND (:minPrice IS NULL OR h.nightPrice >= :minPrice)
       AND (:maxPrice IS NULL OR h.nightPrice <= :maxPrice)
-      AND h.state = 'active'
+      AND (h.state IS NULL OR h.state = '' OR h.state = 'active')
       AND NOT EXISTS (
           SELECT b FROM Booking b
           WHERE b.housing = h
@@ -32,14 +32,14 @@ public interface HousingRepository extends JpaRepository<Housing, Long> {
             AND b.checkOut > :checkIn
       )
     """)
-Page<Housing> findHousingsByFilters(
-        @Param("city") String city,
-        @Param("checkIn") LocalDate checkIn,
-        @Param("checkOut") LocalDate checkOut,
-        @Param("minPrice") Double minPrice,
-        @Param("maxPrice") Double maxPrice,
-        Pageable pageable
-);
+  Page<Housing> findHousingsByFilters(
+          @Param("city") String city,
+          @Param("checkIn") LocalDate checkIn,
+          @Param("checkOut") LocalDate checkOut,
+          @Param("minPrice") Double minPrice,
+          @Param("maxPrice") Double maxPrice,
+          Pageable pageable
+  );
 
   Boolean existsByIdAndHostId(Long housingId, Long hostId);
 
