@@ -101,8 +101,14 @@ public class HousingServiceImpl implements HousingService {
         Housing existingHousing = findById(housingId);
         
         // Preservar valores críticos antes de actualizar
-        String preservedState = existingHousing.getState() != null ? existingHousing.getState() : Housing.STATE_ACTIVE;
+        String preservedState = existingHousing.getState();
+        if (preservedState == null || preservedState.trim().isEmpty()) {
+            preservedState = Housing.STATE_ACTIVE;
+        }
         Long preservedHostId = existingHousing.getHostId();
+        if (preservedHostId == null) {
+            preservedHostId = hostId; // Asegurar que hostId no sea null
+        }
         Double preservedAverageRating = existingHousing.getAverageRating();
         
         // Actualizar solo los campos que vienen en el request
@@ -122,7 +128,7 @@ public class HousingServiceImpl implements HousingService {
             existingHousing.setPrincipalImage(request.imagesUrls().get(0));
         }
         
-        // Restaurar campos críticos que NO deben cambiar
+        // Restaurar campos críticos que NO deben cambiar (SIEMPRE)
         existingHousing.setState(preservedState);
         existingHousing.setHostId(preservedHostId);
         if (preservedAverageRating != null) {
@@ -131,6 +137,8 @@ public class HousingServiceImpl implements HousingService {
         
         // Asegurar que el ID no cambie
         existingHousing.setId(housingId);
+        
+        log.debug("Updating housing {} for host {} with state: {}", housingId, hostId, preservedState);
         
         housingRepository.save(existingHousing);
         return new EntityChangedResponse("Housing updated succesfully", Instant.now());
@@ -165,9 +173,21 @@ public class HousingServiceImpl implements HousingService {
         Integer pageSize = (size != null && size > 0) ? size : 10;
         
         Pageable pageable = PageRequest.of(pageIndex, pageSize);
-        Page<Housing> housings = housingRepository.findByHostId(hostId, pageable);
         
-        return housings.map(housingMapper::toSummaryHousingResponse);
+        try {
+            Page<Housing> housings = housingRepository.findByHostId(hostId, pageable);
+            
+            // Si la query retorna resultados vacíos pero no hay error, retornar página vacía
+            if (housings == null) {
+                return Page.empty(pageable);
+            }
+            
+            return housings.map(housingMapper::toSummaryHousingResponse);
+        } catch (Exception e) {
+            log.error("Error fetching housings for host {}: {}", hostId, e.getMessage());
+            // Retornar página vacía en lugar de lanzar excepción
+            return Page.empty(pageable);
+        }
     }
 
     @Override
