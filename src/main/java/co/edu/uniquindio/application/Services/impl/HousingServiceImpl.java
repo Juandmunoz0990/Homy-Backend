@@ -153,27 +153,20 @@ public class HousingServiceImpl implements HousingService {
          
          log.info("Getting all active housings - page: {}, size: {}", pageNum, pageSize);
          
-         // Primero verificar cuántas propiedades hay en total (sin filtro de estado)
-         Page<Housing> allHousings = housingRepository.findAllWithoutStateFilter(pageable);
-         log.info("Total housings in DB (no filter): {}", allHousings.getTotalElements());
-         
-         // Listar estados de todas las propiedades para debugging
-         if (allHousings.getTotalElements() > 0) {
-             log.info("Sample housing states:");
-             allHousings.getContent().stream()
-                 .limit(5)
-                 .forEach(h -> log.info("  Housing ID {}: state='{}', title='{}'", 
-                     h.getId(), h.getState(), h.getTitle()));
-         }
-         
-         // Ahora buscar solo las activas
+         // Buscar todas las propiedades activas (state = null, '', o 'active')
          Page<Housing> housings = housingRepository.findAllActive(pageable);
+         
          log.info("Found {} active housings (total: {})", housings.getNumberOfElements(), housings.getTotalElements());
          
-         // Si no hay activas pero sí hay propiedades, loggear un warning
-         if (housings.getTotalElements() == 0 && allHousings.getTotalElements() > 0) {
-             log.warn("⚠️ WARNING: There are {} housings in DB but 0 are active! Check their state values.", 
-                 allHousings.getTotalElements());
+         // Loggear algunas propiedades para debugging
+         if (housings.getTotalElements() > 0) {
+             log.info("Sample active housings:");
+             housings.getContent().stream()
+                 .limit(3)
+                 .forEach(h -> log.info("  ID {}: title='{}', city='{}', state='{}'", 
+                     h.getId(), h.getTitle(), h.getCity(), h.getState()));
+         } else {
+             log.warn("⚠️ No active housings found! Check if properties exist and have correct state.");
          }
          
          return housings.map(housingMapper::toSummaryHousingResponse);

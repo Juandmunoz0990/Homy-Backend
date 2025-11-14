@@ -55,35 +55,10 @@ public class HousingController {
 
     @GetMapping
     public ResponseEntity<Page<SummaryHousingResponse>> getHousings(
-            @RequestParam(required = false) String city,
-            @RequestParam(required = false) LocalDate checkIn, 
-            @RequestParam(required = false) LocalDate checkOut,
-            @RequestParam(required = false) Double minPrice, 
-            @RequestParam(required = false) Double maxPrice, 
             @RequestParam(required = false, defaultValue = "0") Integer indexPage,
             @RequestParam(required = false, defaultValue = "20") Integer size) {
-        
-        // Verificar si realmente NO hay filtros (city vacío o null, fechas null, precios null)
-        boolean hasCityFilter = city != null && !city.trim().isEmpty();
-        boolean hasDateFilters = checkIn != null || checkOut != null;
-        boolean hasPriceFilters = minPrice != null || maxPrice != null;
-        boolean hasAnyFilter = hasCityFilter || hasDateFilters || hasPriceFilters;
-        
-        log.info("GET /housings - hasCityFilter={}, hasDateFilters={}, hasPriceFilters={}, hasAnyFilter={}", 
-            hasCityFilter, hasDateFilters, hasPriceFilters, hasAnyFilter);
-        
-        // Si no hay filtros, devolver todas las propiedades activas
-        if (!hasAnyFilter) {
-            log.info("No filters detected, using getAllActiveHousings");
-            Page<SummaryHousingResponse> response = service.getAllActiveHousings(indexPage, size);
-            return ResponseEntity.ok(response);
-        }
-        
-        // Si hay filtros, usar la búsqueda con filtros
-        log.info("Filters detected, using getHousingsByFilters");
-        String cityParam = hasCityFilter ? city.trim() : null;
-        Page<SummaryHousingResponse> response = service.getHousingsByFilters(cityParam, checkIn, checkOut, minPrice,
-                maxPrice, indexPage);
+        // Endpoint simplificado: devuelve TODAS las propiedades activas sin filtros
+        Page<SummaryHousingResponse> response = service.getAllActiveHousings(indexPage, size);
         return ResponseEntity.ok(response);
     }
 
