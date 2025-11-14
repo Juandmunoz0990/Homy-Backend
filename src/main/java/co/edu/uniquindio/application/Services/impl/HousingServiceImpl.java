@@ -151,7 +151,10 @@ public class HousingServiceImpl implements HousingService {
          Integer pageSize = (size != null && size > 0) ? size : 20;
          Pageable pageable = PageRequest.of(pageNum, pageSize);
          
+         log.info("Getting all active housings - page: {}, size: {}", pageNum, pageSize);
          Page<Housing> housings = housingRepository.findAllActive(pageable);
+         log.info("Found {} active housings (total: {})", housings.getNumberOfElements(), housings.getTotalElements());
+         
          return housings.map(housingMapper::toSummaryHousingResponse);
      }
 

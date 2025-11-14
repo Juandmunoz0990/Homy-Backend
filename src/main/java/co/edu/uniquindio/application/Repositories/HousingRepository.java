@@ -17,8 +17,10 @@ import co.edu.uniquindio.application.Models.Housing;
 @Repository
 public interface HousingRepository extends JpaRepository<Housing, Long> {
 
+  // Query simplificada: obtener todas las propiedades que NO estén eliminadas
+  // Acepta: state = null, state = '', state = 'active'
   @Query("""
-    SELECT DISTINCT h
+    SELECT h
     FROM Housing h
     WHERE (h.state IS NULL OR h.state = '' OR h.state = 'active')
     ORDER BY h.id DESC
