@@ -61,14 +61,20 @@ public class HousingController {
             @RequestParam(required = false, defaultValue = "0") Integer indexPage,
             @RequestParam(required = false, defaultValue = "20") Integer size) {
         
+        // Verificar si realmente NO hay filtros (city vacío o null, fechas null, precios null)
+        boolean hasCityFilter = city != null && !city.trim().isEmpty();
+        boolean hasDateFilters = checkIn != null || checkOut != null;
+        boolean hasPriceFilters = minPrice != null || maxPrice != null;
+        boolean hasAnyFilter = hasCityFilter || hasDateFilters || hasPriceFilters;
+        
         // Si no hay filtros, devolver todas las propiedades activas
-        if (city == null && checkIn == null && checkOut == null && minPrice == null && maxPrice == null) {
+        if (!hasAnyFilter) {
             Page<SummaryHousingResponse> response = service.getAllActiveHousings(indexPage, size);
             return ResponseEntity.ok(response);
         }
         
         // Si hay filtros, usar la búsqueda con filtros
-        String cityParam = (city != null && !city.trim().isEmpty()) ? city.trim() : null;
+        String cityParam = hasCityFilter ? city.trim() : null;
         Page<SummaryHousingResponse> response = service.getHousingsByFilters(cityParam, checkIn, checkOut, minPrice,
                 maxPrice, indexPage);
         return ResponseEntity.ok(response);
