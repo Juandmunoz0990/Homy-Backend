@@ -14,7 +14,9 @@ import co.edu.uniquindio.application.Dtos.Housing.Responses.HousingResponse;
 import co.edu.uniquindio.application.Dtos.Housing.Responses.SummaryHousingResponse;
 import co.edu.uniquindio.application.Security.CustomUserDetails;
 import co.edu.uniquindio.application.Services.HousingService;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequestMapping("/housings")
 public class HousingController {
@@ -67,13 +69,18 @@ public class HousingController {
         boolean hasPriceFilters = minPrice != null || maxPrice != null;
         boolean hasAnyFilter = hasCityFilter || hasDateFilters || hasPriceFilters;
         
+        log.info("GET /housings - hasCityFilter={}, hasDateFilters={}, hasPriceFilters={}, hasAnyFilter={}", 
+            hasCityFilter, hasDateFilters, hasPriceFilters, hasAnyFilter);
+        
         // Si no hay filtros, devolver todas las propiedades activas
         if (!hasAnyFilter) {
+            log.info("No filters detected, using getAllActiveHousings");
             Page<SummaryHousingResponse> response = service.getAllActiveHousings(indexPage, size);
             return ResponseEntity.ok(response);
         }
         
         // Si hay filtros, usar la búsqueda con filtros
+        log.info("Filters detected, using getHousingsByFilters");
         String cityParam = hasCityFilter ? city.trim() : null;
         Page<SummaryHousingResponse> response = service.getHousingsByFilters(cityParam, checkIn, checkOut, minPrice,
                 maxPrice, indexPage);

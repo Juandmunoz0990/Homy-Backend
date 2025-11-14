@@ -184,15 +184,23 @@ public class HousingServiceImpl implements HousingService {
      public Page<SummaryHousingResponse> getHousingsByFilters(String city, LocalDate checkIn, LocalDate checkOut,
                                                               Double minPrice, Double maxPrice, Integer indexPage) {
 
+         log.info("getHousingsByFilters called with: city={}, checkIn={}, checkOut={}, minPrice={}, maxPrice={}, indexPage={}", 
+             city, checkIn, checkOut, minPrice, maxPrice, indexPage);
+
          LocalDate dateIn = (checkIn != null) ? checkIn : CHECK_IN_DEFAULT;
          LocalDate dateOut = (checkOut != null) ? checkOut : CHECK_OUT_DEFAULT;
          Double min = (minPrice != null && minPrice >= 0) ? minPrice : 0;
          Double max = (maxPrice != null && maxPrice >= 0 && maxPrice != minPrice) ? maxPrice : 50; 
          Integer index = (indexPage != null && indexPage >= 0) ? indexPage : 0;
 
+         log.info("Using filters: city={}, dateIn={}, dateOut={}, min={}, max={}, index={}", 
+             city, dateIn, dateOut, min, max, index);
+
          Pageable pageable = PageRequest.of(index, 20);
 
          Page<Housing> housings = housingRepository.findHousingsByFilters(city, dateIn, dateOut, min, max, pageable);
+         
+         log.info("Found {} housings with filters", housings.getTotalElements());
 
          return housings.map(housingMapper::toSummaryHousingResponse);
     }
