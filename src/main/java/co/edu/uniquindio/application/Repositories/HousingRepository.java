@@ -19,6 +19,7 @@ public interface HousingRepository extends JpaRepository<Housing, Long> {
 
   // Query simplificada: obtener todas las propiedades que NO estén eliminadas
   // Acepta: state = null, state = '', state = 'active'
+  // IMPORTANTE: Esta query busca propiedades que NO tengan state = 'deleted'
   @Query("""
     SELECT h
     FROM Housing h
@@ -26,6 +27,10 @@ public interface HousingRepository extends JpaRepository<Housing, Long> {
     ORDER BY h.id DESC
     """)
   Page<Housing> findAllActive(Pageable pageable);
+  
+  // Query alternativa: obtener TODAS las propiedades sin filtrar por estado (para debugging)
+  @Query("SELECT h FROM Housing h ORDER BY h.id DESC")
+  Page<Housing> findAllWithoutStateFilter(Pageable pageable);
   
   @Query("""
     SELECT DISTINCT h

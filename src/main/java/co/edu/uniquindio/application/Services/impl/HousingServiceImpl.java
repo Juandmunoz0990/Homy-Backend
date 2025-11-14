@@ -152,8 +152,29 @@ public class HousingServiceImpl implements HousingService {
          Pageable pageable = PageRequest.of(pageNum, pageSize);
          
          log.info("Getting all active housings - page: {}, size: {}", pageNum, pageSize);
+         
+         // Primero verificar cuántas propiedades hay en total (sin filtro de estado)
+         Page<Housing> allHousings = housingRepository.findAllWithoutStateFilter(pageable);
+         log.info("Total housings in DB (no filter): {}", allHousings.getTotalElements());
+         
+         // Listar estados de todas las propiedades para debugging
+         if (allHousings.getTotalElements() > 0) {
+             log.info("Sample housing states:");
+             allHousings.getContent().stream()
+                 .limit(5)
+                 .forEach(h -> log.info("  Housing ID {}: state='{}', title='{}'", 
+                     h.getId(), h.getState(), h.getTitle()));
+         }
+         
+         // Ahora buscar solo las activas
          Page<Housing> housings = housingRepository.findAllActive(pageable);
          log.info("Found {} active housings (total: {})", housings.getNumberOfElements(), housings.getTotalElements());
+         
+         // Si no hay activas pero sí hay propiedades, loggear un warning
+         if (housings.getTotalElements() == 0 && allHousings.getTotalElements() > 0) {
+             log.warn("⚠️ WARNING: There are {} housings in DB but 0 are active! Check their state values.", 
+                 allHousings.getTotalElements());
+         }
          
          return housings.map(housingMapper::toSummaryHousingResponse);
      }
