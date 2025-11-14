@@ -285,6 +285,16 @@ public class HousingServiceImpl implements HousingService {
                 log.info("Using native query result for housing {}", housingId);
                 Object[] row = nativeResult.get();
                 
+                // Verificar el estado de la propiedad (índice 10 en el array)
+                String state = row[10] != null ? (String) row[10] : null;
+                log.info("Housing {} state: '{}'", housingId, state);
+                
+                // Si la propiedad está eliminada, lanzar excepción
+                if (state != null && state.equals("deleted")) {
+                    log.warn("Housing {} is deleted (state='deleted'), cannot retrieve details", housingId);
+                    throw new ObjectNotFoundException("Housing with id: " + housingId + " not found (may be deleted)", Housing.class);
+                }
+                
                 // Construir el DTO desde los resultados nativos
                 HousingResponse response = new HousingResponse();
                 

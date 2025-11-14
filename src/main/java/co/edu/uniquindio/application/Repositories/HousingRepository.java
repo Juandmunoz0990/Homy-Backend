@@ -73,12 +73,13 @@ public interface HousingRepository extends JpaRepository<Housing, Long> {
   java.util.Optional<Housing> findByIdWithoutRelations(@Param("housingId") Long housingId);
   
   // Query nativa para obtener todos los campos sin problemas con ElementCollection
-  // Incluir estado para verificar que no esté eliminado
+  // NO filtrar por estado aquí - permitir ver propiedades eliminadas para debugging
+  // El servicio decidirá si mostrar o no según el estado
   @Query(value = """
     SELECT h.id, h.title, h.description, h.city, h.address, h.latitude, h.length, 
            h.night_price, h.max_capacity, h.principal_image, h.state, h.average_rating, h.host_id
     FROM housings h 
-    WHERE h.id = :housingId AND (h.state IS NULL OR h.state = '' OR h.state = 'active')
+    WHERE h.id = :housingId
     """, nativeQuery = true)
   java.util.Optional<Object[]> findByIdNative(@Param("housingId") Long housingId);
   
