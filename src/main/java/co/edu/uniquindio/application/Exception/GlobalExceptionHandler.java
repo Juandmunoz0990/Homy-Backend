@@ -19,6 +19,7 @@ import co.edu.uniquindio.application.Dtos.ValidationDTO;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.ObjectNotFoundException;
 
 @Slf4j
 @RestControllerAdvice
@@ -41,6 +42,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ResponseDTO<ErrorResponse>> handleEntityNotFoundException(EntityNotFoundException ex, HttpServletRequest request) {
+        return buildError(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(ObjectNotFoundException.class)
+    public ResponseEntity<ResponseDTO<ErrorResponse>> handleObjectNotFoundException(ObjectNotFoundException ex, HttpServletRequest request) {
         return buildError(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI());
     }
 
