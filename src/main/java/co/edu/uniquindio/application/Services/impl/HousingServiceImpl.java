@@ -69,11 +69,8 @@ public class HousingServiceImpl implements HousingService {
      * Valida que haya entre 1 y 10 imágenes, y que haya una imagen principal
      */
     private void validateImages(List<String> imagesUrls) {
-        if (imagesUrls == null || imagesUrls.isEmpty()) {
-            throw new IllegalArgumentException("Debe proporcionar al menos 1 imagen");
-        }
-        
-        if (imagesUrls.size() > 10) {
+        // Las imágenes son opcionales, solo validamos el máximo
+        if (imagesUrls != null && imagesUrls.size() > 10) {
             throw new IllegalArgumentException("No se pueden subir más de 10 imágenes");
         }
     }
