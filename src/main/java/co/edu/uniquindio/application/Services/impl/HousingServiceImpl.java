@@ -178,13 +178,23 @@ public class HousingServiceImpl implements HousingService {
             Page<Housing> housings = housingRepository.findByHostId(hostId, pageable);
             
             // Si la query retorna resultados vacíos pero no hay error, retornar página vacía
-            if (housings == null) {
+            if (housings == null || housings.isEmpty()) {
                 return Page.empty(pageable);
             }
             
-            return housings.map(housingMapper::toSummaryHousingResponse);
+            // Mapear de forma segura, creando el DTO manualmente para evitar problemas con relaciones lazy
+            return housings.map(housing -> {
+                return new SummaryHousingResponse(
+                    housing.getId() != null ? housing.getId() : 0L,
+                    housing.getTitle() != null ? housing.getTitle() : "Untitled",
+                    housing.getCity() != null ? housing.getCity() : "Unknown",
+                    housing.getNightPrice() != null ? housing.getNightPrice() : 0.0,
+                    housing.getPrincipalImage(),
+                    housing.getAverageRating()
+                );
+            });
         } catch (Exception e) {
-            log.error("Error fetching housings for host {}: {}", hostId, e.getMessage());
+            log.error("Error fetching housings for host {}: {}", hostId, e.getMessage(), e);
             // Retornar página vacía en lugar de lanzar excepción
             return Page.empty(pageable);
         }

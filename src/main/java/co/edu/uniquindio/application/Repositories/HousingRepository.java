@@ -42,7 +42,7 @@ Page<Housing> findHousingsByFilters(
 
   Boolean existsByIdAndHostId(Long housingId, Long hostId);
 
-  @Query("SELECT h FROM Housing h WHERE h.hostId = :hostId AND (h.state = 'active' OR h.state IS NULL OR h.state = '') ORDER BY h.id DESC")
+  @Query("SELECT h FROM Housing h WHERE h.hostId = :hostId AND (h.state IS NULL OR h.state = '' OR h.state = 'active') ORDER BY h.id DESC")
   Page<Housing> findByHostId(@Param("hostId") Long hostId, Pageable pageable);
 
   @Modifying
