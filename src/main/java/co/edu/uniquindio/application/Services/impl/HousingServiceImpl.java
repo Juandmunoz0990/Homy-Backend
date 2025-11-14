@@ -94,12 +94,38 @@ public class HousingServiceImpl implements HousingService {
             throw new ObjectNotFoundException("Housing with id: " + housingId + " and hostId: " + hostId + " not found", Housing.class);
         }
         
-        // Validar imágenes: mínimo 1, máximo 10
+        // Validar imágenes: máximo 10
         validateImages(request.imagesUrls());
         
-        Housing housing = housingMapper.toHousing(request);
-        housing.setId(housingId);
-        housingRepository.save(housing);
+        // Obtener el housing existente para preservar campos que no deben cambiar
+        Housing existingHousing = findById(housingId);
+        
+        // Actualizar solo los campos que vienen en el request
+        existingHousing.setTitle(request.title());
+        existingHousing.setDescription(request.description());
+        existingHousing.setCity(request.city());
+        existingHousing.setAddress(request.address());
+        existingHousing.setLatitude(request.latitude());
+        existingHousing.setLength(request.length());
+        existingHousing.setNightPrice(request.pricePerNight());
+        existingHousing.setMaxCapacity(request.maxCapacity());
+        existingHousing.setServices(request.services());
+        existingHousing.setImages(request.imagesUrls());
+        
+        // Actualizar principalImage si hay imágenes
+        if (request.imagesUrls() != null && !request.imagesUrls().isEmpty()) {
+            existingHousing.setPrincipalImage(request.imagesUrls().get(0));
+        }
+        
+        // Preservar campos importantes que NO deben cambiar:
+        // - existingHousing.getId() - ya está establecido
+        // - existingHousing.getHostId() - no debe cambiar
+        // - existingHousing.getState() - no debe cambiar (mantener "active" o "deleted")
+        // - existingHousing.getAverageRating() - se calcula automáticamente
+        // - existingHousing.getBookingsList() - relación, no se toca
+        // - existingHousing.getCommentsList() - relación, no se toca
+        
+        housingRepository.save(existingHousing);
         return new EntityChangedResponse("Housing updated succesfully", Instant.now());
     }
 
