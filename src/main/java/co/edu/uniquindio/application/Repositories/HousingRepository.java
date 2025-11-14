@@ -21,6 +21,7 @@ public interface HousingRepository extends JpaRepository<Housing, Long> {
     SELECT DISTINCT h
     FROM Housing h
     WHERE (h.state IS NULL OR h.state = '' OR h.state = 'active')
+    ORDER BY h.id DESC
     """)
   Page<Housing> findAllActive(Pageable pageable);
   
