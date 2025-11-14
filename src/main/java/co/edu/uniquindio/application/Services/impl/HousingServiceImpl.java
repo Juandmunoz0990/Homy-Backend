@@ -296,6 +296,12 @@ public class HousingServiceImpl implements HousingService {
                     throw new ObjectNotFoundException("Housing with id: " + housingId + " not found (may be deleted)", Housing.class);
                 }
                 
+                // Verificar que el ID existe (índice 0)
+                if (row[0] == null) {
+                    log.warn("Housing {} found but ID is null", housingId);
+                    throw new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class);
+                }
+                
                 // Construir el DTO desde los resultados nativos
                 HousingResponse response = new HousingResponse();
                 
@@ -387,6 +393,16 @@ public class HousingServiceImpl implements HousingService {
                 
                 return response;
             }
+            
+            // Si la query nativa no encontró resultados, la propiedad no existe
+            if (nativeResult == null || !nativeResult.isPresent()) {
+                log.warn("Housing with id {} not found in database (native query returned no results)", housingId);
+                throw new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class);
+            }
+            
+            // Este código nunca debería ejecutarse si la query nativa funciona correctamente
+            // Pero lo mantenemos como fallback por si acaso
+            log.warn("Unexpected: native query returned empty but we reached fallback code for housing {}", housingId);
             
             // Fallback: usar findById pero con manejo especial para evitar ElementCollection
             log.info("Native query did not return results, trying findById for housing {}", housingId);
