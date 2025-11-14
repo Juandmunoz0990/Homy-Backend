@@ -73,6 +73,7 @@ public class HousingController {
 
     @GetMapping("/{housingId}")
     public ResponseEntity<HousingResponse> getHousingDetail(@PathVariable Long housingId) {
+        // Endpoint simplificado: obtener detalles de una propiedad por ID
         HousingResponse response = service.getHousingDetail(housingId);
         return ResponseEntity.ok(response);
     }
