@@ -235,15 +235,110 @@ public class HousingServiceImpl implements HousingService {
         }
 
         try {
-            // Usar query específica para evitar cargar relaciones lazy automáticamente
-            Housing housing = housingRepository.findByIdWithoutRelations(housingId)
-                    .orElse(housingRepository.findById(housingId)
-                            .orElseThrow(() -> new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class)));
-
-            // Construir el DTO manualmente para evitar problemas con relaciones lazy
-            HousingResponse response = new HousingResponse();
+            // Intentar primero con query nativa para evitar problemas con ElementCollection
+            java.util.Optional<Object[]> nativeResult = housingRepository.findByIdNative(housingId);
             
-            // Copiar campos básicos directamente sin acceder a relaciones
+            if (nativeResult.isPresent()) {
+                Object[] row = nativeResult.get();
+                
+                // Construir el DTO desde los resultados nativos
+                HousingResponse response = new HousingResponse();
+                
+                // Mapear campos desde el array de resultados
+                // Orden: id, title, description, city, address, latitude, length, 
+                //        night_price, max_capacity, principal_image, state, average_rating, host_id
+                response.setTitle((String) row[1]);
+                response.setDescription((String) row[2]);
+                response.setCity((String) row[3]);
+                response.setAddress((String) row[4]);
+                response.setLatitude(row[5] != null ? ((Number) row[5]).doubleValue() : null);
+                response.setLength(row[6] != null ? ((Number) row[6]).doubleValue() : null);
+                response.setNightPrice(row[7] != null ? ((Number) row[7]).doubleValue() : null);
+                response.setMaxCapacity(row[8] != null ? ((Number) row[8]).intValue() : null);
+                response.setAverageRating(row[11] != null ? ((Number) row[11]).doubleValue() : null);
+                
+                // Obtener servicios e imágenes con queries separadas (pueden fallar si las tablas tienen nombres diferentes)
+                // Intentar cargar servicios
+                try {
+                    List<String> serviceStrings = housingRepository.findServicesByHousingId(housingId);
+                    if (serviceStrings != null && !serviceStrings.isEmpty()) {
+                        List<co.edu.uniquindio.application.Models.enums.ServicesEnum> services = serviceStrings.stream()
+                            .map(s -> {
+                                try {
+                                    return co.edu.uniquindio.application.Models.enums.ServicesEnum.valueOf(s);
+                                } catch (IllegalArgumentException e) {
+                                    log.warn("Invalid service enum value: {}", s);
+                                    return null;
+                                }
+                            })
+                            .filter(s -> s != null)
+                            .collect(java.util.stream.Collectors.toList());
+                        response.setServices(services);
+                    } else {
+                        response.setServices(new ArrayList<>());
+                    }
+                } catch (Exception e) {
+                    // Si falla la query, usar lista vacía (las tablas pueden tener nombres diferentes)
+                    log.debug("Could not load services via native query for housing {}: {}", housingId, e.getMessage());
+                    response.setServices(new ArrayList<>());
+                }
+                
+                // Intentar cargar imágenes
+                try {
+                    List<String> images = housingRepository.findImagesByHousingId(housingId);
+                    if (images != null && !images.isEmpty()) {
+                        response.setImages(new ArrayList<>(images));
+                    } else {
+                        // Si no hay imágenes en la tabla separada, usar principalImage
+                        String principalImage = (String) row[9];
+                        if (principalImage != null && !principalImage.trim().isEmpty()) {
+                            response.setImages(new ArrayList<>(List.of(principalImage)));
+                        } else {
+                            response.setImages(new ArrayList<>());
+                        }
+                    }
+                } catch (Exception e) {
+                    // Si falla la query, usar principalImage como fallback
+                    log.debug("Could not load images via native query for housing {}: {}", housingId, e.getMessage());
+                    String principalImage = (String) row[9];
+                    if (principalImage != null && !principalImage.trim().isEmpty()) {
+                        response.setImages(new ArrayList<>(List.of(principalImage)));
+                    } else {
+                        response.setImages(new ArrayList<>());
+                    }
+                }
+                
+                // NO incluir bookingsList y commentsList
+                response.setBookingsList(null);
+                response.setCommentsList(null);
+                
+                // Obtener el nombre del host
+                Long hostId = row[12] != null ? ((Number) row[12]).longValue() : null;
+                try {
+                    if (hostId != null) {
+                        User user = userService.findById(hostId);
+                        if (user != null && user.getName() != null) {
+                            response.setHostName(user.getName());
+                        } else {
+                            response.setHostName("Host");
+                        }
+                    } else {
+                        response.setHostName("Host");
+                    }
+                } catch (Exception e) {
+                    log.warn("Error getting host name for housing {}: {}", housingId, e.getMessage());
+                    response.setHostName("Host");
+                }
+                
+                return response;
+            }
+            
+            // Fallback: intentar con findById si la query nativa no encuentra resultados
+            Housing housing = housingRepository.findById(housingId)
+                    .orElseThrow(() -> new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class));
+
+            // Construir el DTO manualmente
+            HousingResponse response = new HousingResponse();
             response.setTitle(housing.getTitle());
             response.setDescription(housing.getDescription());
             response.setCity(housing.getCity());
@@ -254,25 +349,33 @@ public class HousingServiceImpl implements HousingService {
             response.setMaxCapacity(housing.getMaxCapacity());
             response.setAverageRating(housing.getAverageRating());
             
-            // Copiar servicios (ya es EAGER, no debería causar problemas)
-            if (housing.getServices() != null) {
-                response.setServices(new ArrayList<>(housing.getServices()));
-            } else {
+            // Intentar obtener servicios e imágenes de forma segura
+            try {
+                if (housing.getServices() != null) {
+                    response.setServices(new ArrayList<>(housing.getServices()));
+                } else {
+                    response.setServices(new ArrayList<>());
+                }
+            } catch (Exception e) {
+                log.warn("Error accessing services: {}", e.getMessage());
                 response.setServices(new ArrayList<>());
             }
             
-            // Copiar imágenes (campo simple, no relación)
-            if (housing.getImages() != null) {
-                response.setImages(new ArrayList<>(housing.getImages()));
-            } else {
+            try {
+                if (housing.getImages() != null) {
+                    response.setImages(new ArrayList<>(housing.getImages()));
+                } else {
+                    response.setImages(new ArrayList<>());
+                }
+            } catch (Exception e) {
+                log.warn("Error accessing images: {}", e.getMessage());
                 response.setImages(new ArrayList<>());
             }
             
-            // NO incluir bookingsList y commentsList para evitar problemas de serialización
             response.setBookingsList(null);
             response.setCommentsList(null);
 
-            // Obtener el nombre del host de forma segura
+            // Obtener el nombre del host
             try {
                 if (housing.getHostId() != null) {
                     User user = userService.findById(housing.getHostId());
@@ -285,12 +388,13 @@ public class HousingServiceImpl implements HousingService {
                     response.setHostName("Host");
                 }
             } catch (Exception e) {
-                // Si hay error al obtener el usuario, usar un valor por defecto
                 log.warn("Error getting host name for housing {}: {}", housingId, e.getMessage());
                 response.setHostName("Host");
             }
 
             return response;
+        } catch (ObjectNotFoundException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error fetching housing detail for id {}: {}", housingId, e.getMessage(), e);
             throw new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class);

@@ -3,6 +3,7 @@ package co.edu.uniquindio.application.Repositories;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -55,4 +56,21 @@ Page<Housing> findHousingsByFilters(
   // Query específica para obtener housing sin cargar relaciones lazy
   @Query("SELECT h FROM Housing h WHERE h.id = :housingId")
   java.util.Optional<Housing> findByIdWithoutRelations(@Param("housingId") Long housingId);
+  
+  // Query nativa para obtener todos los campos sin problemas con ElementCollection
+  @Query(value = """
+    SELECT h.id, h.title, h.description, h.city, h.address, h.latitude, h.length, 
+           h.night_price, h.max_capacity, h.principal_image, h.state, h.average_rating, h.host_id
+    FROM housings h 
+    WHERE h.id = :housingId
+    """, nativeQuery = true)
+  java.util.Optional<Object[]> findByIdNative(@Param("housingId") Long housingId);
+  
+  // Query para obtener servicios de un housing (JPA crea tabla automáticamente con nombre: Housing_services)
+  @Query(value = "SELECT services FROM Housing_services WHERE Housing_id = :housingId", nativeQuery = true)
+  List<String> findServicesByHousingId(@Param("housingId") Long housingId);
+  
+  // Query para obtener imágenes de un housing (JPA crea tabla automáticamente con nombre: Housing_images)
+  @Query(value = "SELECT images FROM Housing_images WHERE Housing_id = :housingId ORDER BY Housing_id", nativeQuery = true)
+  List<String> findImagesByHousingId(@Param("housingId") Long housingId);
 }
