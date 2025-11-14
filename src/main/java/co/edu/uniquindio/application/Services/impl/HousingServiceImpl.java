@@ -282,24 +282,32 @@ public class HousingServiceImpl implements HousingService {
         
         Object[] row = nativeResult.get();
         
+        // Validar que el array tenga los elementos esperados (13 columnas)
+        if (row == null || row.length < 13) {
+            log.error("Invalid result from native query for housing {}: array length is {}, expected 13", housingId, row != null ? row.length : 0);
+            throw new ObjectNotFoundException("Housing with id: " + housingId + " not found (invalid data)", Housing.class);
+        }
+        
+        log.debug("Native query returned array with {} elements for housing {}", row.length, housingId);
+        
         // Verificar estado (índice 10)
-        String state = row[10] != null ? (String) row[10] : null;
+        String state = row.length > 10 && row[10] != null ? (String) row[10] : null;
         if (state != null && state.equals("deleted")) {
             log.warn("Housing {} is deleted", housingId);
             throw new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class);
         }
         
-        // Construir respuesta
+        // Construir respuesta con validación de índices
         HousingResponse response = new HousingResponse();
-        response.setTitle((String) row[1]);
-        response.setDescription((String) row[2]);
-        response.setCity((String) row[3]);
-        response.setAddress((String) row[4]);
-        response.setLatitude(row[5] != null ? ((Number) row[5]).doubleValue() : null);
-        response.setLength(row[6] != null ? ((Number) row[6]).doubleValue() : null);
-        response.setNightPrice(row[7] != null ? ((Number) row[7]).doubleValue() : null);
-        response.setMaxCapacity(row[8] != null ? ((Number) row[8]).intValue() : null);
-        response.setAverageRating(row[11] != null ? ((Number) row[11]).doubleValue() : null);
+        response.setTitle(row.length > 1 ? (String) row[1] : "");
+        response.setDescription(row.length > 2 ? (String) row[2] : "");
+        response.setCity(row.length > 3 ? (String) row[3] : "");
+        response.setAddress(row.length > 4 ? (String) row[4] : "");
+        response.setLatitude(row.length > 5 && row[5] != null ? ((Number) row[5]).doubleValue() : null);
+        response.setLength(row.length > 6 && row[6] != null ? ((Number) row[6]).doubleValue() : null);
+        response.setNightPrice(row.length > 7 && row[7] != null ? ((Number) row[7]).doubleValue() : null);
+        response.setMaxCapacity(row.length > 8 && row[8] != null ? ((Number) row[8]).intValue() : null);
+        response.setAverageRating(row.length > 11 && row[11] != null ? ((Number) row[11]).doubleValue() : null);
         
         // Cargar servicios
         try {
@@ -322,7 +330,7 @@ public class HousingServiceImpl implements HousingService {
         // Cargar imágenes
         try {
             List<String> images = housingRepository.findImagesByHousingId(housingId);
-            if (images.isEmpty()) {
+            if (images.isEmpty() && row.length > 9) {
                 String principalImage = (String) row[9];
                 if (principalImage != null && !principalImage.trim().isEmpty()) {
                     images = List.of(principalImage);
@@ -330,7 +338,7 @@ public class HousingServiceImpl implements HousingService {
             }
             response.setImages(new ArrayList<>(images));
         } catch (Exception e) {
-            String principalImage = (String) row[9];
+            String principalImage = row.length > 9 ? (String) row[9] : null;
             response.setImages(principalImage != null ? new ArrayList<>(List.of(principalImage)) : new ArrayList<>());
         }
         
@@ -338,7 +346,7 @@ public class HousingServiceImpl implements HousingService {
         response.setCommentsList(null);
         
         // Obtener nombre del host
-        Long hostId = row[12] != null ? ((Number) row[12]).longValue() : null;
+        Long hostId = row.length > 12 && row[12] != null ? ((Number) row[12]).longValue() : null;
         try {
             if (hostId != null) {
                 User user = userService.findById(hostId);
