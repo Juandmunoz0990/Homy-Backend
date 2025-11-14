@@ -234,19 +234,20 @@ public class HousingServiceImpl implements HousingService {
             throw new IllegalArgumentException("Housing ID must be positive");
         }
 
-        // Primero verificar que el housing existe y no está eliminado
-        // No lanzar excepción aquí, dejar que el método continúe y maneje el error más abajo
+        log.info("Attempting to fetch housing detail for ID: {}", housingId);
 
         try {
             // Intentar primero con query nativa para evitar problemas con ElementCollection
             java.util.Optional<Object[]> nativeResult = null;
             try {
                 nativeResult = housingRepository.findByIdNative(housingId);
+                log.debug("Native query result for housing {}: {}", housingId, nativeResult.isPresent() ? "found" : "not found");
             } catch (Exception e) {
-                log.debug("Native query failed for housing {}, will use fallback: {}", housingId, e.getMessage());
+                log.warn("Native query failed for housing {}: {}", housingId, e.getMessage(), e);
             }
             
             if (nativeResult != null && nativeResult.isPresent()) {
+                log.info("Using native query result for housing {}", housingId);
                 Object[] row = nativeResult.get();
                 
                 // Construir el DTO desde los resultados nativos
@@ -342,14 +343,35 @@ public class HousingServiceImpl implements HousingService {
             }
             
             // Fallback: usar findById pero con manejo especial para evitar ElementCollection
-            // Usar EntityManager para cargar solo los campos básicos
+            log.info("Native query did not return results, trying findById for housing {}", housingId);
             Housing housing = null;
             try {
-                // Intentar cargar sin inicializar relaciones
-                housing = housingRepository.findById(housingId).orElse(null);
-                if (housing == null) {
+                // Verificar primero si existe
+                boolean exists = housingRepository.existsById(housingId);
+                log.info("Housing {} exists in database: {}", housingId, exists);
+                
+                if (!exists) {
+                    log.warn("Housing with id {} does not exist in database", housingId);
                     throw new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class);
                 }
+                
+                // Intentar cargar sin inicializar relaciones usando la query específica
+                housing = housingRepository.findByIdWithoutRelations(housingId).orElse(null);
+                
+                if (housing == null) {
+                    // Si la query específica falla, intentar con findById normal
+                    log.debug("findByIdWithoutRelations returned null, trying findById");
+                    housing = housingRepository.findById(housingId).orElse(null);
+                }
+                
+                if (housing == null) {
+                    log.error("Both findByIdWithoutRelations and findById returned null for housing {}", housingId);
+                    throw new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class);
+                }
+                
+                log.info("Successfully loaded housing entity for id {}", housingId);
+            } catch (ObjectNotFoundException e) {
+                throw e;
             } catch (Exception e) {
                 log.error("Error loading housing entity for id {}: {}", housingId, e.getMessage(), e);
                 throw new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class);
@@ -404,19 +426,32 @@ public class HousingServiceImpl implements HousingService {
                 List<String> images = housingRepository.findImagesByHousingId(housingId);
                 if (images != null && !images.isEmpty()) {
                     response.setImages(new ArrayList<>(images));
-                } else if (housing.getPrincipalImage() != null && !housing.getPrincipalImage().trim().isEmpty()) {
-                    // Fallback a principalImage si no hay imágenes en tabla separada
-                    response.setImages(new ArrayList<>(List.of(housing.getPrincipalImage())));
+                } else {
+                    // Intentar obtener principalImage de forma segura usando reflexión o query
+                    try {
+                        // Usar query nativa para obtener solo principalImage sin cargar colecciones
+                        String principalImage = housingRepository.findByIdNative(housingId)
+                            .map(row -> (String) row[9]) // principal_image está en posición 9
+                            .orElse(null);
+                        if (principalImage != null && !principalImage.trim().isEmpty()) {
+                            response.setImages(new ArrayList<>(List.of(principalImage)));
+                        }
+                    } catch (Exception ex) {
+                        log.debug("Could not access principalImage: {}", ex.getMessage());
+                    }
                 }
             } catch (Exception e) {
                 log.debug("Could not load images for housing {}: {}", housingId, e.getMessage());
-                // Fallback a principalImage
+                // Fallback: intentar obtener principalImage desde query nativa
                 try {
-                    if (housing.getPrincipalImage() != null && !housing.getPrincipalImage().trim().isEmpty()) {
-                        response.setImages(new ArrayList<>(List.of(housing.getPrincipalImage())));
+                    String principalImage = housingRepository.findByIdNative(housingId)
+                        .map(row -> (String) row[9])
+                        .orElse(null);
+                    if (principalImage != null && !principalImage.trim().isEmpty()) {
+                        response.setImages(new ArrayList<>(List.of(principalImage)));
                     }
                 } catch (Exception ex) {
-                    log.debug("Could not access principalImage: {}", ex.getMessage());
+                    log.debug("Could not access principalImage via native query: {}", ex.getMessage());
                 }
             }
             
