@@ -42,6 +42,9 @@ Page<Housing> findHousingsByFilters(
 
   Boolean existsByIdAndHostId(Long housingId, Long hostId);
 
+  @Query(value = "SELECT h.id, h.title, h.city, h.night_price, h.principal_image, h.average_rating FROM housings h WHERE h.host_id = :hostId AND (h.state IS NULL OR h.state = '' OR h.state = 'active') ORDER BY h.id DESC", nativeQuery = true, countQuery = "SELECT COUNT(*) FROM housings h WHERE h.host_id = :hostId AND (h.state IS NULL OR h.state = '' OR h.state = 'active')")
+  Page<Object[]> findByHostIdNative(@Param("hostId") Long hostId, Pageable pageable);
+  
   @Query("SELECT h FROM Housing h WHERE h.hostId = :hostId AND (h.state IS NULL OR h.state = '' OR h.state = 'active') ORDER BY h.id DESC")
   Page<Housing> findByHostId(@Param("hostId") Long hostId, Pageable pageable);
 

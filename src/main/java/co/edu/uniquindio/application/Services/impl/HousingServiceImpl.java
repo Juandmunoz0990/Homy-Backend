@@ -175,9 +175,36 @@ public class HousingServiceImpl implements HousingService {
         Pageable pageable = PageRequest.of(pageIndex, pageSize);
         
         try {
+            // Intentar primero con query nativa para evitar problemas con relaciones lazy
+            try {
+                Page<Object[]> nativeResults = housingRepository.findByHostIdNative(hostId, pageable);
+                
+                if (nativeResults != null && !nativeResults.isEmpty()) {
+                    return nativeResults.map(row -> {
+                        Long id = ((Number) row[0]).longValue();
+                        String title = (String) row[1];
+                        String city = (String) row[2];
+                        Double nightPrice = row[3] != null ? ((Number) row[3]).doubleValue() : 0.0;
+                        String principalImage = (String) row[4];
+                        Double averageRating = row[5] != null ? ((Number) row[5]).doubleValue() : null;
+                        
+                        return new SummaryHousingResponse(
+                            id,
+                            title != null ? title : "Untitled",
+                            city != null ? city : "Unknown",
+                            nightPrice,
+                            principalImage,
+                            averageRating
+                        );
+                    });
+                }
+            } catch (Exception nativeEx) {
+                log.warn("Native query failed, falling back to JPQL: {}", nativeEx.getMessage());
+            }
+            
+            // Fallback a query JPQL si la nativa falla
             Page<Housing> housings = housingRepository.findByHostId(hostId, pageable);
             
-            // Si la query retorna resultados vacíos pero no hay error, retornar página vacía
             if (housings == null || housings.isEmpty()) {
                 return Page.empty(pageable);
             }
