@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import co.edu.uniquindio.application.Dtos.User.ChangePasswordRequest;
 import co.edu.uniquindio.application.Dtos.User.HostDetailsUpdateDTO;
 import co.edu.uniquindio.application.Dtos.User.PasswordResetRequest;
 import co.edu.uniquindio.application.Dtos.User.UserResponseDTO;
@@ -110,5 +111,23 @@ public class UserController {
         tokenRepository.deleteByEmail(request.getEmail());
 
         return ResponseEntity.ok(Map.of("message", "Contraseña restablecida con éxito"));
+    }
+    
+    /**
+     * Change password by user's own decision (requires current password)
+     */
+    @PutMapping("/{id}/password")
+    public ResponseEntity<?> changePassword(
+            @AuthenticationPrincipal org.springframework.security.core.userdetails.User user,
+            @Valid @RequestBody ChangePasswordRequest request) {
+        Long id = user.getUsername() != null ? Long.parseLong(user.getUsername()) : null;
+        
+        try {
+            userService.changePassword(id, request.getCurrentPassword(), request.getNewPassword());
+            return ResponseEntity.ok(Map.of("message", "Contraseña actualizada exitosamente"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        }
     }
 }

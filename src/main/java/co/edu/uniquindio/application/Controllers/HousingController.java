@@ -75,4 +75,26 @@ public class HousingController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{housingId}/metrics")
+    public ResponseEntity<co.edu.uniquindio.application.Dtos.Housing.Responses.HousingMetricsResponse> getHousingMetrics(
+            @PathVariable Long housingId,
+            @AuthenticationPrincipal CustomUserDetails user,
+            @RequestParam(required = false) java.time.LocalDate dateFrom,
+            @RequestParam(required = false) java.time.LocalDate dateTo) {
+        Long hostId = user.getId();
+        co.edu.uniquindio.application.Dtos.Housing.Responses.HousingMetricsResponse response = 
+            service.getHousingMetrics(housingId, hostId, dateFrom, dateTo);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{housingId}/availability")
+    public ResponseEntity<co.edu.uniquindio.application.Dtos.Housing.Responses.AvailabilityCalendarResponse> getAvailabilityCalendar(
+            @PathVariable Long housingId,
+            @RequestParam(required = false) java.time.LocalDate startDate,
+            @RequestParam(required = false) java.time.LocalDate endDate) {
+        co.edu.uniquindio.application.Dtos.Housing.Responses.AvailabilityCalendarResponse response = 
+            service.getAvailabilityCalendar(housingId, startDate, endDate);
+        return ResponseEntity.ok(response);
+    }
+
 }

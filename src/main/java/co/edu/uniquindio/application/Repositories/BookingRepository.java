@@ -110,4 +110,37 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
         @Param("statuses") List<BookingStatus> statuses,
         @Param("today") LocalDate today
     );
+    
+    /**
+     * Count bookings for a housing within a date range
+     */
+    @Query("""
+        SELECT COUNT(b)
+        FROM Booking b
+        WHERE b.housing.id = :housingId
+          AND (:dateFrom IS NULL OR b.checkIn >= :dateFrom)
+          AND (:dateTo IS NULL OR b.checkOut <= :dateTo)
+    """)
+    Long countBookingsByHousingAndDateRange(
+        @Param("housingId") Long housingId,
+        @Param("dateFrom") LocalDate dateFrom,
+        @Param("dateTo") LocalDate dateTo
+    );
+    
+    /**
+     * Get all booked date ranges for a housing within a date range
+     */
+    @Query("""
+        SELECT b.checkIn, b.checkOut
+        FROM Booking b
+        WHERE b.housing.id = :housingId
+          AND b.status = 'CONFIRMED'
+          AND (:startDate IS NULL OR b.checkOut >= :startDate)
+          AND (:endDate IS NULL OR b.checkIn <= :endDate)
+    """)
+    List<Object[]> findBookedDateRanges(
+        @Param("housingId") Long housingId,
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate
+    );
 }

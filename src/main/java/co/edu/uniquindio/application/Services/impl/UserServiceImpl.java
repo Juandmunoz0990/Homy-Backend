@@ -112,4 +112,30 @@ public class UserServiceImpl implements UserService {
                 .filter(token -> token.getExpiration().isAfter(LocalDateTime.now()))
                 .isPresent();
     }
+    
+    @Override
+    @Transactional
+    public void changePassword(Long userId, String currentPassword, String newPassword) {
+        User user = repo.findById(userId)
+                .orElseThrow(() -> new ObjectNotFoundException("Usuario no encontrado", User.class));
+        
+        // Verificar que la contraseña actual sea correcta
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new IllegalArgumentException("La contraseña actual es incorrecta");
+        }
+        
+        // Verificar que la nueva contraseña sea diferente
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            throw new IllegalArgumentException("La nueva contraseña debe ser diferente a la actual");
+        }
+        
+        // Validar que la nueva contraseña cumpla con los requisitos
+        if (newPassword.length() < 8) {
+            throw new IllegalArgumentException("La nueva contraseña debe tener al menos 8 caracteres");
+        }
+        
+        // Encriptar y guardar la nueva contraseña
+        user.setPassword(passwordEncoder.encode(newPassword));
+        repo.save(user);
+    }
 }

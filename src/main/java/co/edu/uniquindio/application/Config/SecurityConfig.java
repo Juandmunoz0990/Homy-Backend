@@ -54,6 +54,7 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
                             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // permitir preflights
                             .requestMatchers("/users/forgot-password", "/users/verify-code", "/users/reset-password").permitAll()
                             .requestMatchers("/auth/**").permitAll()
+                            .requestMatchers("/favorites/{housingId}/count").permitAll() // Permitir ver contador sin autenticación
                             .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -82,15 +83,20 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        // Permitir explícitamente Vercel y localhost para desarrollo
+        configuration.setAllowedOrigins(List.of(
+            "https://homy-frontend.vercel.app",
+            "http://localhost:4200",
+            "http://localhost:3000"
+        ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(List.of("Content-Type", "Authorization"));
-        configuration.setAllowCredentials(false);
+        configuration.setAllowedHeaders(List.of("Content-Type", "Authorization", "X-Requested-With"));
+        configuration.setAllowCredentials(true); // Permitir credenciales para JWT
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-        log.info("Allowed origins loaded: " + configuration.getAllowedOrigins());
+        log.info("Allowed origins: " + configuration.getAllowedOrigins());
         return source;
     }
 
