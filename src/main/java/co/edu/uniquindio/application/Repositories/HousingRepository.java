@@ -83,11 +83,21 @@ public interface HousingRepository extends JpaRepository<Housing, Long> {
     """, nativeQuery = true)
   java.util.Optional<Object[]> findByIdNative(@Param("housingId") Long housingId);
   
-  // Query para obtener servicios de un housing (JPA crea tabla automáticamente con nombre: Housing_services)
+  // Query para obtener servicios de un housing
+  // JPA crea tabla automáticamente. Nombres posibles: Housing_services o housings_services
+  // Intentamos el nombre más común primero
   @Query(value = "SELECT services FROM Housing_services WHERE Housing_id = :housingId", nativeQuery = true)
   List<String> findServicesByHousingId(@Param("housingId") Long housingId);
   
-  // Query para obtener imágenes de un housing (JPA crea tabla automáticamente con nombre: Housing_images)
-  @Query(value = "SELECT images FROM Housing_images WHERE Housing_id = :housingId ORDER BY Housing_id", nativeQuery = true)
+  // Query alternativa con nombre snake_case
+  @Query(value = "SELECT services FROM housings_services WHERE housings_id = :housingId", nativeQuery = true)
+  List<String> findServicesByHousingIdSnakeCase(@Param("housingId") Long housingId);
+  
+  // Query para obtener imágenes de un housing
+  @Query(value = "SELECT images FROM Housing_images WHERE Housing_id = :housingId", nativeQuery = true)
   List<String> findImagesByHousingId(@Param("housingId") Long housingId);
+  
+  // Query alternativa con nombre snake_case
+  @Query(value = "SELECT images FROM housings_images WHERE housings_id = :housingId", nativeQuery = true)
+  List<String> findImagesByHousingIdSnakeCase(@Param("housingId") Long housingId);
 }
