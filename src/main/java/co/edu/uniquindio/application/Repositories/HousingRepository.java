@@ -58,11 +58,12 @@ Page<Housing> findHousingsByFilters(
   java.util.Optional<Housing> findByIdWithoutRelations(@Param("housingId") Long housingId);
   
   // Query nativa para obtener todos los campos sin problemas con ElementCollection
+  // Incluir estado para verificar que no esté eliminado
   @Query(value = """
     SELECT h.id, h.title, h.description, h.city, h.address, h.latitude, h.length, 
            h.night_price, h.max_capacity, h.principal_image, h.state, h.average_rating, h.host_id
     FROM housings h 
-    WHERE h.id = :housingId
+    WHERE h.id = :housingId AND (h.state IS NULL OR h.state = '' OR h.state = 'active')
     """, nativeQuery = true)
   java.util.Optional<Object[]> findByIdNative(@Param("housingId") Long housingId);
   
