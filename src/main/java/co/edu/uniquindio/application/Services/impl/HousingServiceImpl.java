@@ -390,6 +390,7 @@ public class HousingServiceImpl implements HousingService {
         }
         
         // Construir respuesta desde la entidad - SIMPLIFICADO: solo campos básicos, NO ElementCollection
+        // IMPORTANTE: NO acceder a housing.getServices() ni housing.getImages() para evitar rollback
         HousingResponse response = new HousingResponse();
         response.setId(housing.getId());
         response.setTitle(housing.getTitle() != null ? housing.getTitle() : "");
