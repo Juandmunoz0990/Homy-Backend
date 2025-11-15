@@ -68,5 +68,7 @@ public interface HousingRepository extends JpaRepository<Housing, Long> {
   @Query("UPDATE Housing h SET h.state = 'deleted' WHERE h.id = :housingId AND h.hostId = :hostId")
   void softDeleteByIdAndHostId(@Param("housingId") Long housingId, @Param("hostId") Long hostId);
   
-  // SIMPLIFICADO: Eliminadas queries complejas, usar findById estándar de JPA
+  // Query para obtener housing sin cargar ElementCollection (evita rollback)
+  @Query("SELECT h FROM Housing h WHERE h.id = :housingId")
+  java.util.Optional<Housing> findByIdSimple(@Param("housingId") Long housingId);
 }

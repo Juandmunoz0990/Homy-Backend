@@ -276,8 +276,8 @@ public class HousingServiceImpl implements HousingService {
 
         log.info("Fetching housing detail for ID: {}", housingId);
 
-        // SIMPLIFICADO AL MÁXIMO: Usar query JPQL simple sin cargar ElementCollection
-        Housing housing = housingRepository.findById(housingId)
+        // SIMPLIFICADO AL MÁXIMO: Usar query JPQL simple que NO carga ElementCollection automáticamente
+        Housing housing = housingRepository.findByIdSimple(housingId)
             .orElseThrow(() -> new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class));
         
         // Verificar estado

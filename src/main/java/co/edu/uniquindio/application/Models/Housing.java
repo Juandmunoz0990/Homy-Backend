@@ -29,10 +29,11 @@ public class Housing {
     private Double length;
     private Double nightPrice;
     private Integer maxCapacity;
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @Enumerated(EnumType.STRING)
     private List<ServicesEnum> services;
     private String principalImage;
+    @ElementCollection(fetch = FetchType.LAZY)
     @Column(columnDefinition = "TEXT")
     private List<String> images;
     private String state = STATE_ACTIVE;
