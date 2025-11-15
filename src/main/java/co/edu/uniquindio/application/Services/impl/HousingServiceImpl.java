@@ -295,100 +295,80 @@ public class HousingServiceImpl implements HousingService {
         response.setMaxCapacity(housing.getMaxCapacity() != null ? housing.getMaxCapacity() : 0);
         response.setAverageRating(housing.getAverageRating());
         
-        // Intentar cargar servicios directamente desde la entidad (dentro de la transacción)
+        // Cargar servicios usando queries nativas (evita problemas con ElementCollection)
         try {
-            List<co.edu.uniquindio.application.Models.enums.ServicesEnum> services = housing.getServices();
-            if (services != null && !services.isEmpty()) {
-                response.setServices(new ArrayList<>(services));
-                log.debug("Loaded {} services directly from entity for housing {}", services.size(), housingId);
-            } else {
-                // Fallback: intentar con query nativa (intentar ambos nombres de tabla)
-                try {
-                    List<String> serviceStrings = housingRepository.findServicesByHousingId(housingId);
-                    List<co.edu.uniquindio.application.Models.enums.ServicesEnum> servicesFromQuery = serviceStrings.stream()
-                        .map(s -> {
-                            try {
-                                return co.edu.uniquindio.application.Models.enums.ServicesEnum.valueOf(s);
-                            } catch (IllegalArgumentException e) {
-                                return null;
-                            }
-                        })
-                        .filter(s -> s != null)
-                        .collect(java.util.stream.Collectors.toList());
-                    response.setServices(servicesFromQuery);
-                    log.debug("Loaded {} services from native query for housing {}", servicesFromQuery.size(), housingId);
-                } catch (Exception e2) {
-                    // Intentar con nombre snake_case
+            List<String> serviceStrings = housingRepository.findServicesByHousingId(housingId);
+            List<co.edu.uniquindio.application.Models.enums.ServicesEnum> services = serviceStrings.stream()
+                .map(s -> {
                     try {
-                        List<String> serviceStrings = housingRepository.findServicesByHousingIdSnakeCase(housingId);
-                        List<co.edu.uniquindio.application.Models.enums.ServicesEnum> servicesFromQuery = serviceStrings.stream()
-                            .map(s -> {
-                                try {
-                                    return co.edu.uniquindio.application.Models.enums.ServicesEnum.valueOf(s);
-                                } catch (IllegalArgumentException e) {
-                                    return null;
-                                }
-                            })
-                            .filter(s -> s != null)
-                            .collect(java.util.stream.Collectors.toList());
-                        response.setServices(servicesFromQuery);
-                        log.debug("Loaded {} services from snake_case query for housing {}", servicesFromQuery.size(), housingId);
-                    } catch (Exception e3) {
-                        log.debug("Could not load services from native queries for housing {}: {}", housingId, e3.getMessage());
-                        response.setServices(new ArrayList<>());
+                        return co.edu.uniquindio.application.Models.enums.ServicesEnum.valueOf(s);
+                    } catch (IllegalArgumentException e) {
+                        return null;
                     }
-                }
-            }
+                })
+                .filter(s -> s != null)
+                .collect(java.util.stream.Collectors.toList());
+            response.setServices(services);
+            log.debug("Loaded {} services from native query for housing {}", services.size(), housingId);
         } catch (Exception e) {
-            log.warn("Could not load services for housing {}: {}", housingId, e.getMessage());
-            response.setServices(new ArrayList<>());
+            // Intentar con nombre snake_case
+            try {
+                List<String> serviceStrings = housingRepository.findServicesByHousingIdSnakeCase(housingId);
+                List<co.edu.uniquindio.application.Models.enums.ServicesEnum> services = serviceStrings.stream()
+                    .map(s -> {
+                        try {
+                            return co.edu.uniquindio.application.Models.enums.ServicesEnum.valueOf(s);
+                        } catch (IllegalArgumentException e2) {
+                            return null;
+                        }
+                    })
+                    .filter(s -> s != null)
+                    .collect(java.util.stream.Collectors.toList());
+                response.setServices(services);
+                log.debug("Loaded {} services from snake_case query for housing {}", services.size(), housingId);
+            } catch (Exception e2) {
+                log.debug("Could not load services for housing {}: {}", housingId, e2.getMessage());
+                response.setServices(new ArrayList<>());
+            }
         }
         
-        // Intentar cargar imágenes directamente desde la entidad (dentro de la transacción)
+        // Cargar imágenes usando queries nativas (evita problemas con ElementCollection)
         try {
-            List<String> images = housing.getImages();
-            if (images != null && !images.isEmpty()) {
+            List<String> images = housingRepository.findImagesByHousingId(housingId);
+            if (!images.isEmpty()) {
                 response.setImages(new ArrayList<>(images));
-                log.debug("Loaded {} images directly from entity for housing {}", images.size(), housingId);
+                log.debug("Loaded {} images from native query for housing {}", images.size(), housingId);
             } else {
-                // Fallback: usar principalImage o query nativa
+                // Si no hay imágenes en la tabla, usar principalImage
                 String principalImage = housing.getPrincipalImage();
                 if (principalImage != null && !principalImage.trim().isEmpty()) {
                     response.setImages(new ArrayList<>(List.of(principalImage)));
                     log.debug("Using principalImage for housing {}", housingId);
                 } else {
-                    // Último fallback: query nativa (intentar ambos nombres de tabla)
-                    try {
-                        List<String> imagesFromQuery = housingRepository.findImagesByHousingId(housingId);
-                        if (!imagesFromQuery.isEmpty()) {
-                            response.setImages(new ArrayList<>(imagesFromQuery));
-                            log.debug("Loaded {} images from native query for housing {}", imagesFromQuery.size(), housingId);
-                        } else {
-                            response.setImages(new ArrayList<>());
-                        }
-                    } catch (Exception e2) {
-                        // Intentar con nombre snake_case
-                        try {
-                            List<String> imagesFromQuery = housingRepository.findImagesByHousingIdSnakeCase(housingId);
-                            if (!imagesFromQuery.isEmpty()) {
-                                response.setImages(new ArrayList<>(imagesFromQuery));
-                                log.debug("Loaded {} images from snake_case query for housing {}", imagesFromQuery.size(), housingId);
-                            } else {
-                                response.setImages(new ArrayList<>());
-                            }
-                        } catch (Exception e3) {
-                            log.debug("Could not load images from native queries for housing {}: {}", housingId, e3.getMessage());
-                            response.setImages(new ArrayList<>());
-                        }
-                    }
+                    response.setImages(new ArrayList<>());
                 }
             }
         } catch (Exception e) {
-            log.warn("Could not load images for housing {}: {}", housingId, e.getMessage());
-            String principalImage = housing.getPrincipalImage();
-            response.setImages(principalImage != null && !principalImage.trim().isEmpty() 
-                ? new ArrayList<>(List.of(principalImage)) 
-                : new ArrayList<>());
+            // Intentar con nombre snake_case
+            try {
+                List<String> images = housingRepository.findImagesByHousingIdSnakeCase(housingId);
+                if (!images.isEmpty()) {
+                    response.setImages(new ArrayList<>(images));
+                    log.debug("Loaded {} images from snake_case query for housing {}", images.size(), housingId);
+                } else {
+                    String principalImage = housing.getPrincipalImage();
+                    response.setImages(principalImage != null && !principalImage.trim().isEmpty() 
+                        ? new ArrayList<>(List.of(principalImage)) 
+                        : new ArrayList<>());
+                }
+            } catch (Exception e2) {
+                log.debug("Could not load images for housing {}: {}", housingId, e2.getMessage());
+                // Último fallback: usar principalImage
+                String principalImage = housing.getPrincipalImage();
+                response.setImages(principalImage != null && !principalImage.trim().isEmpty() 
+                    ? new ArrayList<>(List.of(principalImage)) 
+                    : new ArrayList<>());
+            }
         }
         
         response.setBookingsList(null);
