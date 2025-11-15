@@ -20,9 +20,9 @@ public class ImageServiceImpl implements ImageService {
     private final boolean isConfigured;
 
     public ImageServiceImpl(
-            @Value("${cloudinary.cloud_name:}") String cloudName,
-            @Value("${cloudinary.api_key:}") String apiKey,
-            @Value("${cloudinary.api_secret:}") String apiSecret) {
+            @Value("${CLOUDINARY_CLOUD_NAME:${cloudinary.cloud_name:}}") String cloudName,
+            @Value("${CLOUDINARY_API_KEY:${cloudinary.api_key:}}") String apiKey,
+            @Value("${CLOUDINARY_API_SECRET:${cloudinary.api_secret:}}") String apiSecret) {
         
         Map<String, String> config = new HashMap<>();
         
