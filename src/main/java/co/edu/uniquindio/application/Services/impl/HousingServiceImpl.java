@@ -276,88 +276,139 @@ public class HousingServiceImpl implements HousingService {
 
         log.info("Fetching housing detail for ID: {}", housingId);
 
-        // SIMPLIFICADO AL MÁXIMO: Usar query nativa que solo selecciona campos básicos
-        // Esto evita completamente cargar ElementCollection
-        Object[] row = housingRepository.findByIdBasic(housingId)
+        // SIMPLIFICADO AL MÁXIMO: Usar findById estándar pero con manejo de errores robusto
+        // Si la query nativa falla, usar findById y construir manualmente
+        Housing housing = null;
+        try {
+            // Intentar con query nativa primero
+            Object[] row = housingRepository.findByIdBasic(housingId).orElse(null);
+            if (row != null && row.length >= 13) {
+                // Helper para convertir Object a Number de forma segura
+                java.util.function.Function<Object, Long> toLong = obj -> {
+                    if (obj == null) return null;
+                    if (obj instanceof Number) return ((Number) obj).longValue();
+                    try {
+                        return Long.parseLong(obj.toString());
+                    } catch (Exception e) {
+                        return null;
+                    }
+                };
+                
+                java.util.function.Function<Object, Double> toDouble = obj -> {
+                    if (obj == null) return null;
+                    if (obj instanceof Number) return ((Number) obj).doubleValue();
+                    try {
+                        return Double.parseDouble(obj.toString());
+                    } catch (Exception e) {
+                        return null;
+                    }
+                };
+                
+                java.util.function.Function<Object, Integer> toInteger = obj -> {
+                    if (obj == null) return null;
+                    if (obj instanceof Number) return ((Number) obj).intValue();
+                    try {
+                        return Integer.parseInt(obj.toString());
+                    } catch (Exception e) {
+                        return null;
+                    }
+                };
+                
+                // Extraer datos del array: id, title, description, city, address, latitude, length, 
+                // night_price, max_capacity, principal_image, state, average_rating, host_id
+                Long id = toLong.apply(row[0]);
+                String title = row[1] != null ? row[1].toString() : null;
+                String description = row[2] != null ? row[2].toString() : null;
+                String city = row[3] != null ? row[3].toString() : null;
+                String address = row[4] != null ? row[4].toString() : null;
+                Double latitude = toDouble.apply(row[5]);
+                Double length = toDouble.apply(row[6]);
+                Double nightPrice = toDouble.apply(row[7]);
+                Integer maxCapacity = toInteger.apply(row[8]);
+                String principalImage = row[9] != null ? row[9].toString() : null;
+                String state = row[10] != null ? row[10].toString() : null;
+                Double averageRating = toDouble.apply(row[11]);
+                Long hostId = toLong.apply(row[12]);
+                
+                // Validar que al menos tengamos un ID
+                if (id == null || id <= 0) {
+                    throw new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class);
+                }
+                
+                // Verificar estado
+                if (state != null && state.equals("deleted")) {
+                    throw new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class);
+                }
+                
+                // Construir respuesta directamente desde el array
+                HousingResponse response = new HousingResponse();
+                response.setId(id);
+                response.setTitle(title != null ? title : "");
+                response.setDescription(description != null ? description : "");
+                response.setCity(city != null ? city : "");
+                response.setAddress(address != null ? address : "");
+                response.setLatitude(latitude);
+                response.setLength(length);
+                response.setNightPrice(nightPrice != null ? nightPrice : 0.0);
+                response.setMaxCapacity(maxCapacity != null ? maxCapacity : 0);
+                response.setAverageRating(averageRating);
+                response.setServices(new ArrayList<>());
+                
+                List<String> images = new ArrayList<>();
+                if (principalImage != null && !principalImage.trim().isEmpty()) {
+                    images.add(principalImage);
+                }
+                response.setImages(images);
+                response.setBookingsList(null);
+                response.setCommentsList(null);
+                
+                response.setHostName("Host");
+                try {
+                    if (hostId != null) {
+                        User user = userService.findById(hostId);
+                        if (user != null && user.getName() != null) {
+                            response.setHostName(user.getName());
+                        }
+                    }
+                } catch (Exception e) {
+                    log.debug("Could not load host name: {}", e.getMessage());
+                }
+                
+                return response;
+            }
+        } catch (Exception e) {
+            log.warn("Native query failed, falling back to findById: {}", e.getMessage());
+        }
+        
+        // Fallback: usar findById estándar pero NO tocar ElementCollection
+        housing = housingRepository.findById(housingId)
             .orElseThrow(() -> new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class));
         
-        // Helper para convertir Object a Number de forma segura
-        java.util.function.Function<Object, Long> toLong = obj -> {
-            if (obj == null) return null;
-            if (obj instanceof Number) return ((Number) obj).longValue();
-            try {
-                return Long.parseLong(obj.toString());
-            } catch (Exception e) {
-                return null;
-            }
-        };
-        
-        java.util.function.Function<Object, Double> toDouble = obj -> {
-            if (obj == null) return null;
-            if (obj instanceof Number) return ((Number) obj).doubleValue();
-            try {
-                return Double.parseDouble(obj.toString());
-            } catch (Exception e) {
-                return null;
-            }
-        };
-        
-        java.util.function.Function<Object, Integer> toInteger = obj -> {
-            if (obj == null) return null;
-            if (obj instanceof Number) return ((Number) obj).intValue();
-            try {
-                return Integer.parseInt(obj.toString());
-            } catch (Exception e) {
-                return null;
-            }
-        };
-        
-        // Extraer datos del array de forma segura: id, title, description, city, address, latitude, length, 
-        // night_price, max_capacity, principal_image, state, average_rating, host_id
-        Long id = toLong.apply(row[0]);
-        String title = row[1] != null ? row[1].toString() : null;
-        String description = row[2] != null ? row[2].toString() : null;
-        String city = row[3] != null ? row[3].toString() : null;
-        String address = row[4] != null ? row[4].toString() : null;
-        Double latitude = toDouble.apply(row[5]);
-        Double length = toDouble.apply(row[6]);
-        Double nightPrice = toDouble.apply(row[7]);
-        Integer maxCapacity = toInteger.apply(row[8]);
-        String principalImage = row[9] != null ? row[9].toString() : null;
-        String state = row[10] != null ? row[10].toString() : null;
-        Double averageRating = toDouble.apply(row[11]);
-        Long hostId = toLong.apply(row[12]);
-        
-        // Validar que al menos tengamos un ID
-        if (id == null || id <= 0) {
-            throw new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class);
-        }
-        
         // Verificar estado
-        if (state != null && state.equals("deleted")) {
+        if (housing.getState() != null && housing.getState().equals("deleted")) {
             throw new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class);
         }
         
-        // Construir respuesta - SIMPLIFICADO: solo campos básicos, NO ElementCollection
+        // Construir respuesta desde la entidad - SIMPLIFICADO: solo campos básicos, NO ElementCollection
         HousingResponse response = new HousingResponse();
-        response.setId(id);
-        response.setTitle(title != null ? title : "");
-        response.setDescription(description != null ? description : "");
-        response.setCity(city != null ? city : "");
-        response.setAddress(address != null ? address : "");
-        response.setLatitude(latitude);
-        response.setLength(length);
-        response.setNightPrice(nightPrice);
-        response.setMaxCapacity(maxCapacity);
-        response.setAverageRating(averageRating);
+        response.setId(housing.getId());
+        response.setTitle(housing.getTitle() != null ? housing.getTitle() : "");
+        response.setDescription(housing.getDescription() != null ? housing.getDescription() : "");
+        response.setCity(housing.getCity() != null ? housing.getCity() : "");
+        response.setAddress(housing.getAddress() != null ? housing.getAddress() : "");
+        response.setLatitude(housing.getLatitude());
+        response.setLength(housing.getLength());
+        response.setNightPrice(housing.getNightPrice() != null ? housing.getNightPrice() : 0.0);
+        response.setMaxCapacity(housing.getMaxCapacity() != null ? housing.getMaxCapacity() : 0);
+        response.setAverageRating(housing.getAverageRating());
         
         // SIMPLIFICADO: NO cargar servicios/imágenes desde ElementCollection
         response.setServices(new ArrayList<>());
         
         // Solo usar principalImage
         List<String> images = new ArrayList<>();
-        if (principalImage != null && !principalImage.trim().isEmpty()) {
-            images.add(principalImage);
+        if (housing.getPrincipalImage() != null && !housing.getPrincipalImage().trim().isEmpty()) {
+            images.add(housing.getPrincipalImage());
         }
         response.setImages(images);
         
@@ -367,8 +418,8 @@ public class HousingServiceImpl implements HousingService {
         // SIMPLIFICADO: Nombre del host - básico
         response.setHostName("Host");
         try {
-            if (hostId != null) {
-                User user = userService.findById(hostId);
+            if (housing.getHostId() != null) {
+                User user = userService.findById(housing.getHostId());
                 if (user != null && user.getName() != null) {
                     response.setHostName(user.getName());
                 }
