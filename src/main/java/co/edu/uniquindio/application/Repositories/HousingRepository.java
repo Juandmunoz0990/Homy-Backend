@@ -68,36 +68,5 @@ public interface HousingRepository extends JpaRepository<Housing, Long> {
   @Query("UPDATE Housing h SET h.state = 'deleted' WHERE h.id = :housingId AND h.hostId = :hostId")
   void softDeleteByIdAndHostId(@Param("housingId") Long housingId, @Param("hostId") Long hostId);
   
-  // Query específica para obtener housing sin cargar relaciones lazy
-  @Query("SELECT h FROM Housing h WHERE h.id = :housingId")
-  java.util.Optional<Housing> findByIdWithoutRelations(@Param("housingId") Long housingId);
-  
-  // Query nativa para obtener todos los campos sin problemas con ElementCollection
-  // NO filtrar por estado aquí - permitir ver propiedades eliminadas para debugging
-  // El servicio decidirá si mostrar o no según el estado
-  @Query(value = """
-    SELECT h.id, h.title, h.description, h.city, h.address, h.latitude, h.length, 
-           h.night_price, h.max_capacity, h.principal_image, h.state, h.average_rating, h.host_id
-    FROM housings h 
-    WHERE h.id = :housingId
-    """, nativeQuery = true)
-  java.util.Optional<Object[]> findByIdNative(@Param("housingId") Long housingId);
-  
-  // Query para obtener servicios de un housing
-  // JPA crea tabla automáticamente. Nombres posibles: Housing_services o housings_services
-  // Intentamos el nombre más común primero
-  @Query(value = "SELECT services FROM Housing_services WHERE Housing_id = :housingId", nativeQuery = true)
-  List<String> findServicesByHousingId(@Param("housingId") Long housingId);
-  
-  // Query alternativa con nombre snake_case
-  @Query(value = "SELECT services FROM housings_services WHERE housings_id = :housingId", nativeQuery = true)
-  List<String> findServicesByHousingIdSnakeCase(@Param("housingId") Long housingId);
-  
-  // Query para obtener imágenes de un housing
-  @Query(value = "SELECT images FROM Housing_images WHERE Housing_id = :housingId", nativeQuery = true)
-  List<String> findImagesByHousingId(@Param("housingId") Long housingId);
-  
-  // Query alternativa con nombre snake_case
-  @Query(value = "SELECT images FROM housings_images WHERE housings_id = :housingId", nativeQuery = true)
-  List<String> findImagesByHousingIdSnakeCase(@Param("housingId") Long housingId);
+  // SIMPLIFICADO: Eliminadas queries complejas, usar findById estándar de JPA
 }
