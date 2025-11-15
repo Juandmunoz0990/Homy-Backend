@@ -276,36 +276,52 @@ public class HousingServiceImpl implements HousingService {
 
         log.info("Fetching housing detail for ID: {}", housingId);
 
-        // SIMPLIFICADO AL MÁXIMO: Usar query JPQL simple que NO carga ElementCollection automáticamente
-        Housing housing = housingRepository.findByIdSimple(housingId)
+        // SIMPLIFICADO AL MÁXIMO: Usar query nativa que solo selecciona campos básicos
+        // Esto evita completamente cargar ElementCollection
+        Object[] row = housingRepository.findByIdBasic(housingId)
             .orElseThrow(() -> new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class));
         
+        // Extraer datos del array: id, title, description, city, address, latitude, length, 
+        // night_price, max_capacity, principal_image, state, average_rating, host_id
+        Long id = ((Number) row[0]).longValue();
+        String title = (String) row[1];
+        String description = (String) row[2];
+        String city = (String) row[3];
+        String address = (String) row[4];
+        Double latitude = row[5] != null ? ((Number) row[5]).doubleValue() : null;
+        Double length = row[6] != null ? ((Number) row[6]).doubleValue() : null;
+        Double nightPrice = row[7] != null ? ((Number) row[7]).doubleValue() : 0.0;
+        Integer maxCapacity = row[8] != null ? ((Number) row[8]).intValue() : 0;
+        String principalImage = (String) row[9];
+        String state = (String) row[10];
+        Double averageRating = row[11] != null ? ((Number) row[11]).doubleValue() : null;
+        Long hostId = row[12] != null ? ((Number) row[12]).longValue() : null;
+        
         // Verificar estado
-        if (housing.getState() != null && housing.getState().equals("deleted")) {
+        if (state != null && state.equals("deleted")) {
             throw new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class);
         }
         
-        // Construir respuesta - SIMPLIFICADO: solo campos básicos, NO tocar ElementCollection
+        // Construir respuesta - SIMPLIFICADO: solo campos básicos, NO ElementCollection
         HousingResponse response = new HousingResponse();
-        response.setId(housing.getId());
-        response.setTitle(housing.getTitle() != null ? housing.getTitle() : "");
-        response.setDescription(housing.getDescription() != null ? housing.getDescription() : "");
-        response.setCity(housing.getCity() != null ? housing.getCity() : "");
-        response.setAddress(housing.getAddress() != null ? housing.getAddress() : "");
-        response.setLatitude(housing.getLatitude());
-        response.setLength(housing.getLength());
-        response.setNightPrice(housing.getNightPrice() != null ? housing.getNightPrice() : 0.0);
-        response.setMaxCapacity(housing.getMaxCapacity() != null ? housing.getMaxCapacity() : 0);
-        response.setAverageRating(housing.getAverageRating());
+        response.setId(id);
+        response.setTitle(title != null ? title : "");
+        response.setDescription(description != null ? description : "");
+        response.setCity(city != null ? city : "");
+        response.setAddress(address != null ? address : "");
+        response.setLatitude(latitude);
+        response.setLength(length);
+        response.setNightPrice(nightPrice);
+        response.setMaxCapacity(maxCapacity);
+        response.setAverageRating(averageRating);
         
-        // SIMPLIFICADO: NO intentar cargar servicios/imágenes desde ElementCollection
-        // Solo usar principalImage y listas vacías
+        // SIMPLIFICADO: NO cargar servicios/imágenes desde ElementCollection
         response.setServices(new ArrayList<>());
         
-        // Solo usar principalImage, no intentar cargar lista de imágenes
+        // Solo usar principalImage
         List<String> images = new ArrayList<>();
-        if (housing.getPrincipalImage() != null && !housing.getPrincipalImage().trim().isEmpty()) {
-            images.add(housing.getPrincipalImage());
+        if (principalImage != null && !principalImage.trim().isEmpty()) {
+            images.add(principalImage);
         }
         response.setImages(images);
         
@@ -315,8 +331,8 @@ public class HousingServiceImpl implements HousingService {
         // SIMPLIFICADO: Nombre del host - básico
         response.setHostName("Host");
         try {
-            if (housing.getHostId() != null) {
-                User user = userService.findById(housing.getHostId());
+            if (hostId != null) {
+                User user = userService.findById(hostId);
                 if (user != null && user.getName() != null) {
                     response.setHostName(user.getName());
                 }
