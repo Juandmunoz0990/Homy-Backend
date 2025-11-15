@@ -281,21 +281,57 @@ public class HousingServiceImpl implements HousingService {
         Object[] row = housingRepository.findByIdBasic(housingId)
             .orElseThrow(() -> new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class));
         
-        // Extraer datos del array: id, title, description, city, address, latitude, length, 
+        // Helper para convertir Object a Number de forma segura
+        java.util.function.Function<Object, Long> toLong = obj -> {
+            if (obj == null) return null;
+            if (obj instanceof Number) return ((Number) obj).longValue();
+            try {
+                return Long.parseLong(obj.toString());
+            } catch (Exception e) {
+                return null;
+            }
+        };
+        
+        java.util.function.Function<Object, Double> toDouble = obj -> {
+            if (obj == null) return null;
+            if (obj instanceof Number) return ((Number) obj).doubleValue();
+            try {
+                return Double.parseDouble(obj.toString());
+            } catch (Exception e) {
+                return null;
+            }
+        };
+        
+        java.util.function.Function<Object, Integer> toInteger = obj -> {
+            if (obj == null) return null;
+            if (obj instanceof Number) return ((Number) obj).intValue();
+            try {
+                return Integer.parseInt(obj.toString());
+            } catch (Exception e) {
+                return null;
+            }
+        };
+        
+        // Extraer datos del array de forma segura: id, title, description, city, address, latitude, length, 
         // night_price, max_capacity, principal_image, state, average_rating, host_id
-        Long id = ((Number) row[0]).longValue();
-        String title = (String) row[1];
-        String description = (String) row[2];
-        String city = (String) row[3];
-        String address = (String) row[4];
-        Double latitude = row[5] != null ? ((Number) row[5]).doubleValue() : null;
-        Double length = row[6] != null ? ((Number) row[6]).doubleValue() : null;
-        Double nightPrice = row[7] != null ? ((Number) row[7]).doubleValue() : 0.0;
-        Integer maxCapacity = row[8] != null ? ((Number) row[8]).intValue() : 0;
-        String principalImage = (String) row[9];
-        String state = (String) row[10];
-        Double averageRating = row[11] != null ? ((Number) row[11]).doubleValue() : null;
-        Long hostId = row[12] != null ? ((Number) row[12]).longValue() : null;
+        Long id = toLong.apply(row[0]);
+        String title = row[1] != null ? row[1].toString() : null;
+        String description = row[2] != null ? row[2].toString() : null;
+        String city = row[3] != null ? row[3].toString() : null;
+        String address = row[4] != null ? row[4].toString() : null;
+        Double latitude = toDouble.apply(row[5]);
+        Double length = toDouble.apply(row[6]);
+        Double nightPrice = toDouble.apply(row[7]);
+        Integer maxCapacity = toInteger.apply(row[8]);
+        String principalImage = row[9] != null ? row[9].toString() : null;
+        String state = row[10] != null ? row[10].toString() : null;
+        Double averageRating = toDouble.apply(row[11]);
+        Long hostId = toLong.apply(row[12]);
+        
+        // Validar que al menos tengamos un ID
+        if (id == null || id <= 0) {
+            throw new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class);
+        }
         
         // Verificar estado
         if (state != null && state.equals("deleted")) {
