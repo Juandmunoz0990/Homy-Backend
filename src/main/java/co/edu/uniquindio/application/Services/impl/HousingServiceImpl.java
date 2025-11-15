@@ -145,7 +145,7 @@ public class HousingServiceImpl implements HousingService {
     }
 
      @Override
-     @Transactional(readOnly = true)
+     @Transactional(readOnly = true, noRollbackFor = {Exception.class})
      public Page<SummaryHousingResponse> getAllActiveHousings(Integer page, Integer size) {
          Integer pageNum = (page != null && page >= 0) ? page : 0;
          Integer pageSize = (size != null && size > 0) ? size : 20;
@@ -153,23 +153,27 @@ public class HousingServiceImpl implements HousingService {
          
          log.info("Getting all active housings - page: {}, size: {}", pageNum, pageSize);
          
-         // Buscar todas las propiedades activas (state = null, '', o 'active')
-         Page<Housing> housings = housingRepository.findAllActive(pageable);
-         
-         log.info("Found {} active housings (total: {})", housings.getNumberOfElements(), housings.getTotalElements());
-         
-         // Loggear algunas propiedades para debugging
-         if (housings.getTotalElements() > 0) {
-             log.info("Sample active housings:");
-             housings.getContent().stream()
-                 .limit(3)
-                 .forEach(h -> log.info("  ID {}: title='{}', city='{}', state='{}'", 
-                     h.getId(), h.getTitle(), h.getCity(), h.getState()));
-         } else {
-             log.warn("⚠️ No active housings found! Check if properties exist and have correct state.");
+         try {
+             // Buscar todas las propiedades activas (state = null, '', o 'active')
+             Page<Housing> housings = housingRepository.findAllActive(pageable);
+             
+             log.info("Found {} active housings (total: {})", housings.getNumberOfElements(), housings.getTotalElements());
+             
+             // SIMPLIFICADO: Mapear manualmente para evitar problemas con ElementCollection
+             return housings.map(housing -> {
+                 return new SummaryHousingResponse(
+                     housing.getId() != null ? housing.getId() : 0L,
+                     housing.getTitle() != null ? housing.getTitle() : "Untitled",
+                     housing.getCity() != null ? housing.getCity() : "Unknown",
+                     housing.getNightPrice() != null ? housing.getNightPrice() : 0.0,
+                     housing.getPrincipalImage(),
+                     housing.getAverageRating()
+                 );
+             });
+         } catch (Exception e) {
+             log.error("Error in getAllActiveHousings: {}", e.getMessage(), e);
+             return Page.empty(pageable);
          }
-         
-         return housings.map(housingMapper::toSummaryHousingResponse);
      }
 
      @Override
@@ -264,7 +268,7 @@ public class HousingServiceImpl implements HousingService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, noRollbackFor = {Exception.class})
     public HousingResponse getHousingDetail(Long housingId) {
         if (housingId == null || housingId <= 0) {
             throw new IllegalArgumentException("Housing ID must be positive");
@@ -272,7 +276,7 @@ public class HousingServiceImpl implements HousingService {
 
         log.info("Fetching housing detail for ID: {}", housingId);
 
-        // Buscar la propiedad - SIMPLIFICADO: usar findById estándar
+        // SIMPLIFICADO AL MÁXIMO: Usar query JPQL simple sin cargar ElementCollection
         Housing housing = housingRepository.findById(housingId)
             .orElseThrow(() -> new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class));
         
@@ -281,7 +285,7 @@ public class HousingServiceImpl implements HousingService {
             throw new ObjectNotFoundException("Housing with id: " + housingId + " not found", Housing.class);
         }
         
-        // Construir respuesta - SIMPLIFICADO: solo campos básicos
+        // Construir respuesta - SIMPLIFICADO: solo campos básicos, NO tocar ElementCollection
         HousingResponse response = new HousingResponse();
         response.setId(housing.getId());
         response.setTitle(housing.getTitle() != null ? housing.getTitle() : "");
@@ -294,28 +298,14 @@ public class HousingServiceImpl implements HousingService {
         response.setMaxCapacity(housing.getMaxCapacity() != null ? housing.getMaxCapacity() : 0);
         response.setAverageRating(housing.getAverageRating());
         
-        // SIMPLIFICADO: Cargar servicios - solo intentar una vez, si falla lista vacía
-        try {
-            List<co.edu.uniquindio.application.Models.enums.ServicesEnum> services = housing.getServices();
-            response.setServices(services != null ? new ArrayList<>(services) : new ArrayList<>());
-        } catch (Exception e) {
-            log.debug("Could not load services: {}", e.getMessage());
-            response.setServices(new ArrayList<>());
-        }
+        // SIMPLIFICADO: NO intentar cargar servicios/imágenes desde ElementCollection
+        // Solo usar principalImage y listas vacías
+        response.setServices(new ArrayList<>());
         
-        // SIMPLIFICADO: Cargar imágenes - solo principalImage si existe
+        // Solo usar principalImage, no intentar cargar lista de imágenes
         List<String> images = new ArrayList<>();
-        try {
-            if (housing.getImages() != null && !housing.getImages().isEmpty()) {
-                images = new ArrayList<>(housing.getImages());
-            }
-        } catch (Exception e) {
-            log.debug("Could not load images: {}", e.getMessage());
-        }
-        
-        // Si no hay imágenes, usar principalImage
-        if (images.isEmpty() && housing.getPrincipalImage() != null && !housing.getPrincipalImage().trim().isEmpty()) {
-            images = new ArrayList<>(List.of(housing.getPrincipalImage()));
+        if (housing.getPrincipalImage() != null && !housing.getPrincipalImage().trim().isEmpty()) {
+            images.add(housing.getPrincipalImage());
         }
         response.setImages(images);
         
@@ -333,6 +323,7 @@ public class HousingServiceImpl implements HousingService {
             }
         } catch (Exception e) {
             // Ignorar error, usar "Host" por defecto
+            log.debug("Could not load host name: {}", e.getMessage());
         }
         
         return response;
