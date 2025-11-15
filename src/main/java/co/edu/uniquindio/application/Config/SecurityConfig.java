@@ -55,6 +55,8 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
                             .requestMatchers("/users/forgot-password", "/users/verify-code", "/users/reset-password").permitAll()
                             .requestMatchers("/auth/**").permitAll()
                             .requestMatchers("/favorites/{housingId}/count").permitAll() // Permitir ver contador sin autenticación
+                            .requestMatchers(HttpMethod.GET, "/housings").permitAll() // Permitir ver lista de propiedades
+                            .requestMatchers(HttpMethod.GET, "/housings/{housingId}").permitAll() // Permitir ver detalles de propiedad
                             .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
