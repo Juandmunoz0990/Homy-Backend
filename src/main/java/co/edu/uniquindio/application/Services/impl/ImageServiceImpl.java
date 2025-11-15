@@ -17,28 +17,45 @@ public class ImageServiceImpl implements ImageService {
 
     private final Cloudinary cloudinary;
 
+    private final boolean isConfigured;
+
     public ImageServiceImpl(
             @Value("${cloudinary.cloud_name:}") String cloudName,
             @Value("${cloudinary.api_key:}") String apiKey,
             @Value("${cloudinary.api_secret:}") String apiSecret) {
         
-        // Si no hay configuración, usar valores por defecto (deshabilitar uploads)
         Map<String, String> config = new HashMap<>();
         
-        // Usar variables de entorno o valores por defecto
-        String finalCloudName = cloudName != null && !cloudName.isEmpty() ? cloudName : "demo";
-        String finalApiKey = apiKey != null && !apiKey.isEmpty() ? apiKey : "demo";
-        String finalApiSecret = apiSecret != null && !apiSecret.isEmpty() ? apiSecret : "demo";
+        // Verificar si hay configuración válida (no vacía y no "demo")
+        boolean hasCloudName = cloudName != null && !cloudName.isEmpty() && !cloudName.equals("demo");
+        boolean hasApiKey = apiKey != null && !apiKey.isEmpty() && !apiKey.equals("demo");
+        boolean hasApiSecret = apiSecret != null && !apiSecret.isEmpty() && !apiSecret.equals("demo");
         
-        config.put("cloud_name", finalCloudName);
-        config.put("api_key", finalApiKey);
-        config.put("api_secret", finalApiSecret);
+        this.isConfigured = hasCloudName && hasApiKey && hasApiSecret;
+        
+        if (this.isConfigured) {
+            config.put("cloud_name", cloudName);
+            config.put("api_key", apiKey);
+            config.put("api_secret", apiSecret);
+        } else {
+            // Usar valores demo solo para inicializar (no funcionarán)
+            config.put("cloud_name", "demo");
+            config.put("api_key", "demo");
+            config.put("api_secret", "demo");
+        }
         
         cloudinary = new Cloudinary(config);
     }
 
     @Override
     public Map upload(MultipartFile image) throws Exception {
+        if (!isConfigured) {
+            throw new IllegalStateException(
+                "Cloudinary no está configurado. Por favor, configura las variables de entorno: " +
+                "CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET en Railway."
+            );
+        }
+        
         File file = convert(image);
         return cloudinary.uploader().upload(file, ObjectUtils.asMap("folder", "homy"));
     }
